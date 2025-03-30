@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Job Listings - JobHive Kenya</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        :root {
+            --primary-color: #2c3e50;
+            --secondary-color: #3498db;
+            --accent-color: #e74c3c;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        .navbar {
+            background-color: var(--primary-color);
+            padding: 1rem 0;
+        }
+
+        .navbar-brand {
+            color: white !important;
+            font-weight: bold;
+            font-size: 1.5rem;
+        }
+
+        .nav-link {
+            color: white !important;
+            position: relative;
+            padding: 0.5rem 1rem;
+        }
+
+        .nav-link.active {
+            color: var(--secondary-color) !important;
+        }
+
+        .nav-link.active::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 80%;
+            height: 2px;
+            background-color: var(--secondary-color);
+        }
+
+        .job-search-section {
+            background: linear-gradient(rgba(44, 62, 80, 0.9), rgba(44, 62, 80, 0.9)),
+                        url('https://images.unsplash.com/photo-1521737711867-e3b97375f902?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80');
+            background-size: cover;
+            background-position: center;
+            color: white;
+            padding: 50px 0;
+            margin-bottom: 30px;
+        }
+
+        .search-box {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 20px rgba(0,0,0,0.1);
+        }
+
+        .job-card {
+            border: none;
+            border-radius: 10px;
+            box-shadow: 0 2px 15px rgba(0,0,0,0.1);
+            transition: transform 0.3s;
+            margin-bottom: 20px;
+        }
+
+        .job-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .company-logo {
+            width: 60px;
+            height: 60px;
+            object-fit: cover;
+            border-radius: 8px;
+        }
+
+        .job-tag {
+            background-color: #e9ecef;
+            padding: 5px 10px;
+            border-radius: 15px;
+            font-size: 0.8rem;
+            margin-right: 5px;
+            color: var(--primary-color);
+        }
+
+        .salary {
+            color: var(--accent-color);
+            font-weight: bold;
+        }
+
+        .footer {
+            background-color: var(--primary-color);
+            color: white;
+            padding: 50px 0;
+            margin-top: 50px;
+        }
+
+        .pagination .page-link {
+            color: var(--secondary-color);
+        }
+
+        .pagination .page-item.active .page-link {
+            background-color: var(--secondary-color);
+            border-color: var(--secondary-color);
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark">
+        <div class="container">
+            <a class="navbar-brand" href="index.html">
+                <i class="fas fa-briefcase"></i> JobHive Kenya
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="index.html">Home</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active" href="jobs.html">Jobs</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="resume-builder.html">Resume Builder</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="login.html">Login</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="employer-login.html">Employer</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Job Search Section -->
+    <section class="job-search-section">
+        <div class="container">
+            <h1 class="text-center mb-4">Find Your Next Job</h1>
+            <div class="search-box">
+                <form>
+                    <div class="row g-3">
+                        <div class="col-md-4">
+                            <input type="text" class="form-control" placeholder="Job title or keyword">
+                        </div>
+                        <div class="col-md-4">
+                            <select class="form-select">
+                                <option selected>Select Location</option>
+                                <option>Nairobi</option>
+                                <option>Mombasa</option>
+                                <option>Kisumu</option>
+                                <option>Nakuru</option>
+                                <option>Eldoret</option>
+                                <option>Thika</option>
+                                <option>Kitale</option>
+                                <option>Malindi</option>
+                                <option>Kakamega</option>
+                                <option>Bungoma</option>
+                                <option>Kisii</option>
+                                <option>Kericho</option>
+                                <option>Machakos</option>
+                                <option>Kitui</option>
+                                <option>Garissa</option>
+                                <option>Mombasa</option>
+                                <option>Kilifi</option>
+                                <option>Kwale</option>
+                                <option>Lamu</option>
+                                <option>Taita Taveta</option>
+                                <option>Tana River</option>
+                                <option>Wajir</option>
+                                <option>Mandera</option>
+                                <option>Marsabit</option>
+                                <option>Isiolo</option>
+                                <option>Meru</option>
+                                <option>Embu</option>
+                                <option>Kitui</option>
+                                <option>Machakos</option>
+                                <option>Makueni</option>
+                                <option>Nyandarua</option>
+                                <option>Nyeri</option>
+                                <option>Kirinyaga</option>
+                                <option>Murang'a</option>
+                                <option>Kiambu</option>
+                                <option>Turkana</option>
+                                <option>West Pokot</option>
+                                <option>Samburu</option>
+                                <option>Trans Nzoia</option>
+                                <option>Uasin Gishu</option>
+                                <option>Elgeyo/Marakwet</option>
+                                <option>Nandi</option>
+                                <option>Baringo</option>
+                                <option>Laikipia</option>
+                                <option>Nakuru</option>
+                                <option>Narok</option>
+                                <option>Kajiado</option>
+                                <option>Kericho</option>
+                                <option>Bomet</option>
+                                <option>Kakamega</option>
+                                <option>Vihiga</option>
+                                <option>Bungoma</option>
+                                <option>Busia</option>
+                                <option>Siaya</option>
+                                <option>Kisumu</option>
+                                <option>Homa Bay</option>
+                                <option>Migori</option>
+                                <option>Kisii</option>
+                                <option>Nyamira</option>
+                                <option>Remote</option>
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <select class="form-select">
+                                <option selected>Job Type</option>
+                                <option>Full Time</option>
+                                <option>Part Time</option>
+                                <option>Internship</option>
+                                <option>Freelance</option>
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <button type="submit" class="btn btn-primary w-100">Search</button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </section>
+
+    <!-- Job Listings -->
+    <section class="container">
+        <div class="row">
+            <!-- Job Cards -->
+            <div class="col-12">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h4>Showing 24 Jobs</h4>
+                    <select class="form-select w-auto">
+                        <option>Most Recent</option>
+                        <option>Salary: High to Low</option>
+                        <option>Salary: Low to High</option>
+                    </select>
+                </div>
+
+                <!-- Job Card 1 -->
+                <div class="card job-card">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div>
+                                <h5 class="card-title">Software Developer</h5>
+                                <p class="card-text text-muted">Tech Solutions Ltd</p>
+                                <div class="mb-2">
+                                    <span class="job-tag"><i class="fas fa-map-marker-alt"></i> Nairobi</span>
+                                    <span class="job-tag"><i class="fas fa-clock"></i> Full Time</span>
+                                    <span class="job-tag"><i class="fas fa-briefcase"></i> 2-3 years</span>
+                                </div>
+                                <p class="card-text">We are looking for a skilled software developer to join our team...</p>
+                            </div>
+                            <div class="text-end">
+                                <div class="salary mb-2">KSh 45,000 - 60,000</div>
+                                <div class="d-flex gap-2">
+                                    <a href="job-details.html" class="btn btn-outline-secondary">View Details</a>
+                                    <button class="btn btn-outline-primary">Apply Now</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Job Card 2 -->
+                <div class="card job-card">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div>
+                                <h5 class="card-title">Marketing Intern</h5>
+                                <p class="card-text text-muted">Digital Marketing Agency</p>
+                                <div class="mb-2">
+                                    <span class="job-tag"><i class="fas fa-map-marker-alt"></i> Remote</span>
+                                    <span class="job-tag"><i class="fas fa-clock"></i> Internship</span>
+                                    <span class="job-tag"><i class="fas fa-briefcase"></i> Entry Level</span>
+                                </div>
+                                <p class="card-text">Join our dynamic marketing team and learn digital marketing skills...</p>
+                            </div>
+                            <div class="text-end">
+                                <div class="salary mb-2">KSh 15,000 - 20,000</div>
+                                <div class="d-flex gap-2">
+                                    <button class="btn btn-outline-secondary">View Details</button>
+                                    <button class="btn btn-outline-primary">Apply Now</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Pagination -->
+                <nav aria-label="Page navigation" class="mt-4">
+                    <ul class="pagination justify-content-center">
+                        <li class="page-item disabled">
+                            <a class="page-link" href="#" tabindex="-1">Previous</a>
+                        </li>
+                        <li class="page-item active"><a class="page-link" href="#">1</a></li>
+                        <li class="page-item"><a class="page-link" href="#">2</a></li>
+                        <li class="page-item"><a class="page-link" href="#">3</a></li>
+                        <li class="page-item">
+                            <a class="page-link" href="#">Next</a>
+                        </li>
+                    </ul>
+                </nav>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-4">
+                    <h5>About JobHive Kenya</h5>
+                    <p>Connecting Kenyan youth with meaningful employment opportunities.</p>
+                </div>
+                <div class="col-md-4">
+                    <h5>Quick Links</h5>
+                    <ul class="list-unstyled">
+                        <li><a href="#" class="text-white">About Us</a></li>
+                        <li><a href="#" class="text-white">Contact</a></li>
+                        <li><a href="#" class="text-white">Privacy Policy</a></li>
+                        <li><a href="#" class="text-white">Terms of Service</a></li>
+                    </ul>
+                </div>
+                <div class="col-md-4">
+                    <h5>Connect With Us</h5>
+                    <div class="social-links">
+                        <a href="#" class="text-white me-3"><i class="fab fa-facebook"></i></a>
+                        <a href="#" class="text-white me-3"><i class="fab fa-twitter"></i></a>
+                        <a href="#" class="text-white me-3"><i class="fab fa-linkedin"></i></a>
+                    </div>
+                </div>
+            </div>
+            <hr class="mt-4">
+            <div class="text-center">
+                <p>&copy; 2024 JobHive Kenya. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Check login status
+        function checkLoginStatus() {
+            const isLoggedIn = localStorage.getItem('isLoggedIn') === 'true';
+            if (!isLoggedIn) {
+                window.location.href = 'login.html';
+                return;
+            }
+        }
+
+        // Run check when page loads
+        window.addEventListener('load', checkLoginStatus);
+    </script>
+</body>
+</html> 

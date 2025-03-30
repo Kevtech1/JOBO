@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Software Developer - JobHive Kenya</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        :root {
+            --primary-color: #2c3e50;
+            --secondary-color: #3498db;
+            --accent-color: #e74c3c;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        .navbar {
+            background-color: var(--primary-color);
+            padding: 1rem 0;
+        }
+
+        .navbar-brand {
+            color: white !important;
+            font-weight: bold;
+            font-size: 1.5rem;
+        }
+
+        .nav-link {
+            color: white !important;
+            position: relative;
+            padding: 0.5rem 1rem;
+        }
+
+        .nav-link.active {
+            color: var(--secondary-color) !important;
+        }
+
+        .nav-link.active::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 80%;
+            height: 2px;
+            background-color: var(--secondary-color);
+        }
+
+        .job-header {
+            background-color: #f8f9fa;
+            padding: 40px 0;
+            margin-bottom: 30px;
+        }
+
+        .job-tag {
+            background-color: #e9ecef;
+            padding: 5px 10px;
+            border-radius: 15px;
+            font-size: 0.8rem;
+            margin-right: 5px;
+            color: var(--primary-color);
+        }
+
+        .salary {
+            color: var(--accent-color);
+            font-weight: bold;
+            font-size: 1.2rem;
+        }
+
+        .company-info {
+            background-color: white;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 2px 15px rgba(0,0,0,0.1);
+        }
+
+        .job-description {
+            background-color: white;
+            border-radius: 10px;
+            padding: 30px;
+            box-shadow: 0 2px 15px rgba(0,0,0,0.1);
+        }
+
+        .footer {
+            background-color: var(--primary-color);
+            color: white;
+            padding: 50px 0;
+            margin-top: 50px;
+        }
+
+        .btn-primary {
+            background-color: var(--secondary-color);
+            border-color: var(--secondary-color);
+        }
+
+        .btn-primary:hover {
+            background-color: #2980b9;
+            border-color: #2980b9;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark">
+        <div class="container">
+            <a class="navbar-brand" href="index.html">
+                <i class="fas fa-briefcase"></i> JobHive Kenya
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="index.html">Home</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="jobs.html">Jobs</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="resume-builder.html">Resume Builder</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="login.html">Login</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="employer-login.html">Employer</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Job Header -->
+    <section class="job-header">
+        <div class="container">
+            <div class="row align-items-center">
+                <div class="col-md-8">
+                    <h1 class="mb-3">Software Developer</h1>
+                    <div class="mb-3">
+                        <span class="job-tag"><i class="fas fa-building"></i> Tech Solutions Ltd</span>
+                        <span class="job-tag"><i class="fas fa-map-marker-alt"></i> Nairobi</span>
+                        <span class="job-tag"><i class="fas fa-clock"></i> Full Time</span>
+                        <span class="job-tag"><i class="fas fa-briefcase"></i> 2-3 years</span>
+                    </div>
+                    <div class="salary">KSh 45,000 - 60,000</div>
+                </div>
+                <div class="col-md-4 text-md-end">
+                    <button class="btn btn-primary btn-lg">Apply Now</button>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Job Details -->
+    <section class="container mb-5">
+        <div class="row">
+            <!-- Main Content -->
+            <div class="col-md-8">
+                <div class="job-description">
+                    <h3 class="mb-4">Job Description</h3>
+                    <p>We are looking for a skilled Software Developer to join our team. The ideal candidate will have strong programming skills and experience in modern web technologies.</p>
+                    
+                    <h4 class="mt-4 mb-3">Key Responsibilities</h4>
+                    <ul>
+                        <li>Develop and maintain web applications using modern technologies</li>
+                        <li>Write clean, maintainable, and efficient code</li>
+                        <li>Collaborate with team members to design and implement new features</li>
+                        <li>Debug and fix issues in existing applications</li>
+                        <li>Participate in code reviews and provide constructive feedback</li>
+                    </ul>
+
+                    <h4 class="mt-4 mb-3">Requirements</h4>
+                    <ul>
+                        <li>Bachelor's degree in Computer Science or related field</li>
+                        <li>2-3 years of experience in software development</li>
+                        <li>Strong knowledge of JavaScript, HTML, and CSS</li>
+                        <li>Experience with React.js or Angular</li>
+                        <li>Understanding of RESTful APIs</li>
+                        <li>Good problem-solving skills</li>
+                        <li>Excellent communication skills</li>
+                    </ul>
+
+                    <h4 class="mt-4 mb-3">Benefits</h4>
+                    <ul>
+                        <li>Competitive salary</li>
+                        <li>Health insurance</li>
+                        <li>Professional development opportunities</li>
+                        <li>Flexible working hours</li>
+                        <li>Annual leave</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Sidebar -->
+            <div class="col-md-4">
+                <div class="company-info mb-4">
+                    <h4>About Tech Solutions Ltd</h4>
+                    <p>Tech Solutions Ltd is a leading technology company in Kenya, specializing in software development and digital solutions. We work with clients across various industries to deliver innovative solutions.</p>
+                    <hr>
+                    <h5>Company Details</h5>
+                    <p><i class="fas fa-map-marker-alt me-2"></i> Westlands, Nairobi</p>
+                    <p><i class="fas fa-globe me-2"></i> www.techsolutions.co.ke</p>
+                    <p><i class="fas fa-phone me-2"></i> +254 700 000 000</p>
+                </div>
+
+                <div class="company-info">
+                    <h4>Similar Jobs</h4>
+                    <div class="list-group">
+                        <a href="#" class="list-group-item list-group-item-action">
+                            <h6>Frontend Developer</h6>
+                            <small class="text-muted">Digital Innovations Ltd</small>
+                            <div class="salary">KSh 40,000 - 55,000</div>
+                        </a>
+                        <a href="#" class="list-group-item list-group-item-action">
+                            <h6>Full Stack Developer</h6>
+                            <small class="text-muted">Tech Hub Kenya</small>
+                            <div class="salary">KSh 50,000 - 70,000</div>
+                        </a>
+                        <a href="#" class="list-group-item list-group-item-action">
+                            <h6>Backend Developer</h6>
+                            <small class="text-muted">Innovate Systems</small>
+                            <div class="salary">KSh 45,000 - 65,000</div>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-4">
+                    <h5>About JobHive Kenya</h5>
+                    <p>Connecting Kenyan youth with meaningful employment opportunities.</p>
+                </div>
+                <div class="col-md-4">
+                    <h5>Quick Links</h5>
+                    <ul class="list-unstyled">
+                        <li><a href="#" class="text-white">About Us</a></li>
+                        <li><a href="#" class="text-white">Contact</a></li>
+                        <li><a href="#" class="text-white">Privacy Policy</a></li>
+                        <li><a href="#" class="text-white">Terms of Service</a></li>
+                    </ul>
+                </div>
+                <div class="col-md-4">
+                    <h5>Connect With Us</h5>
+                    <div class="social-links">
+                        <a href="#" class="text-white me-3"><i class="fab fa-facebook"></i></a>
+                        <a href="#" class="text-white me-3"><i class="fab fa-twitter"></i></a>
+                        <a href="#" class="text-white me-3"><i class="fab fa-linkedin"></i></a>
+                    </div>
+                </div>
+            </div>
+            <hr class="mt-4">
+            <div class="text-center">
+                <p>&copy; 2024 JobHive Kenya. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html> 

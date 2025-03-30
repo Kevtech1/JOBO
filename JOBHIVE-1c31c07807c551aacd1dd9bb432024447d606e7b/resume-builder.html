@@ -1,0 +1,666 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Resume Builder - JobHive Kenya</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        :root {
+            --primary-color: #2c3e50;
+            --secondary-color: #3498db;
+            --accent-color: #e74c3c;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        .navbar {
+            background-color: var(--primary-color);
+            padding: 1rem 0;
+        }
+
+        .navbar-brand {
+            color: white !important;
+            font-weight: bold;
+            font-size: 1.5rem;
+        }
+
+        .nav-link {
+            color: white !important;
+            position: relative;
+            padding: 0.5rem 1rem;
+        }
+
+        .nav-link.active {
+            color: var(--secondary-color) !important;
+        }
+
+        .nav-link.active::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 80%;
+            height: 2px;
+            background-color: var(--secondary-color);
+        }
+
+        .resume-builder-section {
+            background-color: #f8f9fa;
+            padding: 50px 0;
+        }
+
+        .resume-form {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 15px rgba(0,0,0,0.1);
+            padding: 30px;
+        }
+
+        .form-step {
+            display: none;
+        }
+
+        .form-step.active {
+            display: block;
+        }
+
+        .step-indicator {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 30px;
+        }
+
+        .step {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background-color: #e9ecef;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--primary-color);
+            font-weight: bold;
+            position: relative;
+        }
+
+        .step.active {
+            background-color: var(--secondary-color);
+            color: white;
+        }
+
+        .step.completed {
+            background-color: #28a745;
+            color: white;
+        }
+
+        .step-line {
+            position: absolute;
+            top: 50%;
+            left: 100%;
+            width: 100px;
+            height: 2px;
+            background-color: #e9ecef;
+            transform: translateY(-50%);
+        }
+
+        .step:last-child .step-line {
+            display: none;
+        }
+
+        .btn-primary {
+            background-color: var(--secondary-color);
+            border-color: var(--secondary-color);
+        }
+
+        .btn-primary:hover {
+            background-color: #2980b9;
+            border-color: #2980b9;
+        }
+
+        .footer {
+            background-color: var(--primary-color);
+            color: white;
+            padding: 50px 0;
+            margin-top: 50px;
+        }
+
+        .preview-section {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 15px rgba(0,0,0,0.1);
+            padding: 30px;
+            margin-top: 30px;
+        }
+
+        .preview-header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .preview-name {
+            font-size: 2rem;
+            font-weight: bold;
+            color: var(--primary-color);
+        }
+
+        .preview-contact {
+            color: var(--secondary-color);
+            margin-bottom: 20px;
+        }
+
+        .preview-section-title {
+            color: var(--primary-color);
+            border-bottom: 2px solid var(--secondary-color);
+            padding-bottom: 5px;
+            margin-bottom: 15px;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark">
+        <div class="container">
+            <a class="navbar-brand" href="index.html">
+                <i class="fas fa-briefcase"></i> JobHive Kenya
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="index.html">Home</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="jobs.html">Jobs</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active" href="resume-builder.html">Resume Builder</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="login.html">Login</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="employer-login.html">Employer</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Resume Builder Section -->
+    <section class="resume-builder-section">
+        <div class="container">
+            <h1 class="text-center mb-5">Create Your Professional Resume</h1>
+            
+            <!-- Step Indicators -->
+            <div class="step-indicator">
+                <div class="step active">
+                    1
+                    <div class="step-line"></div>
+                </div>
+                <div class="step">
+                    2
+                    <div class="step-line"></div>
+                </div>
+                <div class="step">
+                    3
+                    <div class="step-line"></div>
+                </div>
+                <div class="step">
+                    4
+                </div>
+            </div>
+
+            <div class="row">
+                <!-- Resume Form -->
+                <div class="col-md-8">
+                    <div class="resume-form">
+                        <!-- Step 1: Personal Information -->
+                        <div class="form-step active" id="step1">
+                            <h3 class="mb-4">Personal Information</h3>
+                            <form>
+                                <div class="row mb-3">
+                                    <div class="col-md-6">
+                                        <label class="form-label">First Name</label>
+                                        <input type="text" class="form-control" required>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label">Last Name</label>
+                                        <input type="text" class="form-control" required>
+                                    </div>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">Email</label>
+                                    <input type="email" class="form-control" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">Phone Number</label>
+                                    <input type="tel" class="form-control" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">Location</label>
+                                    <select class="form-select" required>
+                                        <option value="">Select County</option>
+                                        <option value="Baringo">Baringo</option>
+                                        <option value="Bomet">Bomet</option>
+                                        <option value="Bungoma">Bungoma</option>
+                                        <option value="Busia">Busia</option>
+                                        <option value="Elgeyo/Marakwet">Elgeyo/Marakwet</option>
+                                        <option value="Embu">Embu</option>
+                                        <option value="Garissa">Garissa</option>
+                                        <option value="Homa Bay">Homa Bay</option>
+                                        <option value="Isiolo">Isiolo</option>
+                                        <option value="Kajiado">Kajiado</option>
+                                        <option value="Kakamega">Kakamega</option>
+                                        <option value="Kericho">Kericho</option>
+                                        <option value="Kiambu">Kiambu</option>
+                                        <option value="Kilifi">Kilifi</option>
+                                        <option value="Kirinyaga">Kirinyaga</option>
+                                        <option value="Kisii">Kisii</option>
+                                        <option value="Kisumu">Kisumu</option>
+                                        <option value="Kitui">Kitui</option>
+                                        <option value="Kwale">Kwale</option>
+                                        <option value="Laikipia">Laikipia</option>
+                                        <option value="Lamu">Lamu</option>
+                                        <option value="Machakos">Machakos</option>
+                                        <option value="Makueni">Makueni</option>
+                                        <option value="Mandera">Mandera</option>
+                                        <option value="Marsabit">Marsabit</option>
+                                        <option value="Meru">Meru</option>
+                                        <option value="Migori">Migori</option>
+                                        <option value="Mombasa">Mombasa</option>
+                                        <option value="Murang'a">Murang'a</option>
+                                        <option value="Nairobi">Nairobi</option>
+                                        <option value="Nakuru">Nakuru</option>
+                                        <option value="Nandi">Nandi</option>
+                                        <option value="Narok">Narok</option>
+                                        <option value="Nyamira">Nyamira</option>
+                                        <option value="Nyandarua">Nyandarua</option>
+                                        <option value="Nyeri">Nyeri</option>
+                                        <option value="Samburu">Samburu</option>
+                                        <option value="Siaya">Siaya</option>
+                                        <option value="Taita/Taveta">Taita/Taveta</option>
+                                        <option value="Tana River">Tana River</option>
+                                        <option value="Tharaka-Nithi">Tharaka-Nithi</option>
+                                        <option value="Trans Nzoia">Trans Nzoia</option>
+                                        <option value="Turkana">Turkana</option>
+                                        <option value="Uasin Gishu">Uasin Gishu</option>
+                                        <option value="Vihiga">Vihiga</option>
+                                        <option value="Wajir">Wajir</option>
+                                        <option value="West Pokot">West Pokot</option>
+                                    </select>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">Professional Summary</label>
+                                    <textarea class="form-control" rows="4" required></textarea>
+                                </div>
+                                <div class="d-flex justify-content-between">
+                                    <button type="button" class="btn btn-secondary" disabled>Previous</button>
+                                    <button type="button" class="btn btn-primary next-step">Next</button>
+                                </div>
+                            </form>
+                        </div>
+
+                        <!-- Step 2: Education -->
+                        <div class="form-step" id="step2">
+                            <h3 class="mb-4">Education</h3>
+                            <form>
+                                <div class="mb-3">
+                                    <label class="form-label">Highest Level of Education</label>
+                                    <select class="form-select" required>
+                                        <option value="">Select Education Level</option>
+                                        <option>High School</option>
+                                        <option>Certificate</option>
+                                        <option>Diploma</option>
+                                        <option>Bachelor's Degree</option>
+                                        <option>Master's Degree</option>
+                                        <option>PhD</option>
+                                    </select>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">Institution Name</label>
+                                    <input type="text" class="form-control" required>
+                                </div>
+                                <div class="row mb-3">
+                                    <div class="col-md-6">
+                                        <label class="form-label">Start Date</label>
+                                        <input type="date" class="form-control" required>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label">End Date</label>
+                                        <input type="date" class="form-control" required>
+                                    </div>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">Field of Study</label>
+                                    <input type="text" class="form-control" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">Grade/GPA (if applicable)</label>
+                                    <input type="text" class="form-control">
+                                </div>
+                                <div class="d-flex justify-content-between">
+                                    <button type="button" class="btn btn-secondary prev-step">Previous</button>
+                                    <button type="button" class="btn btn-primary next-step">Next</button>
+                                </div>
+                            </form>
+                        </div>
+
+                        <!-- Step 3: Work Experience -->
+                        <div class="form-step" id="step3">
+                            <h3 class="mb-4">Work Experience</h3>
+                            <form>
+                                <div class="mb-3">
+                                    <label class="form-label">Company Name</label>
+                                    <input type="text" class="form-control" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">Job Title</label>
+                                    <input type="text" class="form-control" required>
+                                </div>
+                                <div class="row mb-3">
+                                    <div class="col-md-6">
+                                        <label class="form-label">Start Date</label>
+                                        <input type="date" class="form-control" required>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label">End Date</label>
+                                        <input type="date" class="form-control">
+                                    </div>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">Job Description</label>
+                                    <textarea class="form-control" rows="4" required></textarea>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">Key Achievements</label>
+                                    <textarea class="form-control" rows="4"></textarea>
+                                </div>
+                                <div class="d-flex justify-content-between">
+                                    <button type="button" class="btn btn-secondary prev-step">Previous</button>
+                                    <button type="button" class="btn btn-primary next-step">Next</button>
+                                </div>
+                            </form>
+                        </div>
+
+                        <!-- Step 4: Skills & Additional Information -->
+                        <div class="form-step" id="step4">
+                            <h3 class="mb-4">Skills & Additional Information</h3>
+                            <form>
+                                <div class="mb-3">
+                                    <label class="form-label">Skills (comma-separated)</label>
+                                    <input type="text" class="form-control" placeholder="e.g., JavaScript, Python, Project Management" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">Languages</label>
+                                    <input type="text" class="form-control" placeholder="e.g., English (Fluent), Swahili (Native)">
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">Certifications</label>
+                                    <div class="mb-2">
+                                        <div class="form-check form-check-inline">
+                                            <input class="form-check-input" type="radio" name="certificateType" id="certificateUrl" checked>
+                                            <label class="form-check-label" for="certificateUrl">Certificate URL</label>
+                                        </div>
+                                        <div class="form-check form-check-inline">
+                                            <input class="form-check-input" type="radio" name="certificateType" id="certificateFile">
+                                            <label class="form-check-label" for="certificateFile">Upload Certificate</label>
+                                        </div>
+                                    </div>
+                                    <div id="certificateUrlInput">
+                                        <input type="url" class="form-control" placeholder="Enter certificate URL">
+                                    </div>
+                                    <div id="certificateFileInput" style="display: none;">
+                                        <input type="file" class="form-control" accept="image/*">
+                                        <small class="text-muted">Supported formats: JPG, PNG, PDF (Max size: 5MB)</small>
+                                    </div>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">Additional Information</label>
+                                    <textarea class="form-control" rows="3" placeholder="Any other relevant information"></textarea>
+                                </div>
+                                <div class="d-flex justify-content-between">
+                                    <button type="button" class="btn btn-secondary prev-step">Previous</button>
+                                    <button type="button" class="btn btn-primary" id="generate-resume">Generate Resume</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Resume Preview -->
+                <div class="col-md-4">
+                    <div class="preview-section">
+                        <h3 class="mb-4">Resume Preview</h3>
+                        <div class="preview-header">
+                            <div class="preview-name">Your Name</div>
+                            <div class="preview-contact">
+                                <div>email@example.com</div>
+                                <div>+254 700 000 000</div>
+                                <div>Nairobi, Kenya</div>
+                            </div>
+                        </div>
+
+                        <div class="preview-section-title">Professional Summary</div>
+                        <p>Your professional summary will appear here...</p>
+
+                        <div class="preview-section-title">Education</div>
+                        <p>Your education details will appear here...</p>
+
+                        <div class="preview-section-title">Work Experience</div>
+                        <p>Your work experience will appear here...</p>
+
+                        <div class="preview-section-title">Skills</div>
+                        <p>Your skills will appear here...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-4">
+                    <h5>About JobHive Kenya</h5>
+                    <p>Connecting Kenyan youth with meaningful employment opportunities.</p>
+                </div>
+                <div class="col-md-4">
+                    <h5>Quick Links</h5>
+                    <ul class="list-unstyled">
+                        <li><a href="#" class="text-white">About Us</a></li>
+                        <li><a href="#" class="text-white">Contact</a></li>
+                        <li><a href="#" class="text-white">Privacy Policy</a></li>
+                        <li><a href="#" class="text-white">Terms of Service</a></li>
+                    </ul>
+                </div>
+                <div class="col-md-4">
+                    <h5>Connect With Us</h5>
+                    <div class="social-links">
+                        <a href="#" class="text-white me-3"><i class="fab fa-facebook"></i></a>
+                        <a href="#" class="text-white me-3"><i class="fab fa-twitter"></i></a>
+                        <a href="#" class="text-white me-3"><i class="fab fa-linkedin"></i></a>
+                    </div>
+                </div>
+            </div>
+            <hr class="mt-4">
+            <div class="text-center">
+                <p>&copy; 2024 JobHive Kenya. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <script>
+        // Check login status
+        function checkLoginStatus() {
+            const isLoggedIn = localStorage.getItem('isLoggedIn') === 'true';
+            if (!isLoggedIn) {
+                window.location.href = 'login.html';
+                return;
+            }
+        }
+
+        // Run check when page loads
+        window.addEventListener('load', checkLoginStatus);
+
+        // Form Navigation
+        document.querySelectorAll('.next-step').forEach(button => {
+            button.addEventListener('click', () => {
+                const currentStep = button.closest('.form-step');
+                const nextStep = currentStep.nextElementSibling;
+                const currentStepNumber = parseInt(currentStep.id.replace('step', ''));
+                const nextStepNumber = currentStepNumber + 1;
+
+                // Update step indicators
+                document.querySelectorAll('.step').forEach(step => {
+                    const stepNumber = parseInt(step.textContent);
+                    if (stepNumber === currentStepNumber) {
+                        step.classList.remove('active');
+                        step.classList.add('completed');
+                    } else if (stepNumber === nextStepNumber) {
+                        step.classList.add('active');
+                    }
+                });
+
+                // Show next step
+                currentStep.classList.remove('active');
+                nextStep.classList.add('active');
+            });
+        });
+
+        document.querySelectorAll('.prev-step').forEach(button => {
+            button.addEventListener('click', () => {
+                const currentStep = button.closest('.form-step');
+                const prevStep = currentStep.previousElementSibling;
+                const currentStepNumber = parseInt(currentStep.id.replace('step', ''));
+                const prevStepNumber = currentStepNumber - 1;
+
+                // Update step indicators
+                document.querySelectorAll('.step').forEach(step => {
+                    const stepNumber = parseInt(step.textContent);
+                    if (stepNumber === currentStepNumber) {
+                        step.classList.remove('active', 'completed');
+                    } else if (stepNumber === prevStepNumber) {
+                        step.classList.add('active');
+                        step.classList.remove('completed');
+                    }
+                });
+
+                // Show previous step
+                currentStep.classList.remove('active');
+                prevStep.classList.add('active');
+            });
+        });
+
+        // Generate PDF functionality
+        document.getElementById('generate-resume').addEventListener('click', function() {
+            const element = document.querySelector('.preview-section');
+            const opt = {
+                margin: 1,
+                filename: 'my-resume.pdf',
+                image: { type: 'jpeg', quality: 0.98 },
+                html2canvas: { scale: 2 },
+                jsPDF: { unit: 'in', format: 'a4', orientation: 'portrait' }
+            };
+
+            // Show loading state
+            this.disabled = true;
+            this.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Generating PDF...';
+
+            // Generate PDF
+            html2pdf().set(opt).from(element).save().then(() => {
+                // Reset button state
+                this.disabled = false;
+                this.innerHTML = 'Download Resume';
+            });
+        });
+
+        // Live Preview Update
+        document.querySelectorAll('input, textarea, select').forEach(input => {
+            input.addEventListener('input', () => {
+                updatePreview();
+            });
+        });
+
+        // Certificate type toggle
+        document.querySelectorAll('input[name="certificateType"]').forEach(radio => {
+            radio.addEventListener('change', function() {
+                const urlInput = document.getElementById('certificateUrlInput');
+                const fileInput = document.getElementById('certificateFileInput');
+                
+                if (this.id === 'certificateUrl') {
+                    urlInput.style.display = 'block';
+                    fileInput.style.display = 'none';
+                } else {
+                    urlInput.style.display = 'none';
+                    fileInput.style.display = 'block';
+                }
+            });
+        });
+
+        function updatePreview() {
+            // Update name
+            const firstName = document.querySelector('#step1 input[type="text"]').value;
+            const lastName = document.querySelector('#step1 input[type="text"]:nth-child(2)').value;
+            document.querySelector('.preview-name').textContent = `${firstName} ${lastName}`;
+
+            // Update contact info
+            const email = document.querySelector('#step1 input[type="email"]').value;
+            const phone = document.querySelector('#step1 input[type="tel"]').value;
+            const location = document.querySelector('#step1 select').value;
+            document.querySelector('.preview-contact').innerHTML = `
+                <div>${email}</div>
+                <div>${phone}</div>
+                <div>${location}</div>
+            `;
+
+            // Update summary
+            const summary = document.querySelector('#step1 textarea').value;
+            document.querySelector('.preview-section-title + p').textContent = summary;
+
+            // Update education
+            const education = document.querySelector('#step2 select').value;
+            const institution = document.querySelector('#step2 input[type="text"]').value;
+            const field = document.querySelector('#step2 input[type="text"]:last-child').value;
+            document.querySelectorAll('.preview-section-title')[1].nextElementSibling.textContent = 
+                `${education} in ${field}\n${institution}`;
+
+            // Update work experience
+            const company = document.querySelector('#step3 input[type="text"]').value;
+            const title = document.querySelector('#step3 input[type="text"]:nth-child(2)').value;
+            const description = document.querySelector('#step3 textarea').value;
+            document.querySelectorAll('.preview-section-title')[2].nextElementSibling.textContent = 
+                `${title} at ${company}\n${description}`;
+
+            // Update skills
+            const skills = document.querySelector('#step4 input[type="text"]').value;
+            document.querySelectorAll('.preview-section-title')[3].nextElementSibling.textContent = skills;
+
+            // Update certificates
+            const certificateType = document.querySelector('input[name="certificateType"]:checked').id;
+            let certificateText = '';
+            
+            if (certificateType === 'certificateUrl') {
+                certificateText = document.querySelector('#certificateUrlInput input').value;
+            } else {
+                const fileInput = document.querySelector('#certificateFileInput input');
+                if (fileInput.files.length > 0) {
+                    certificateText = `Certificate: ${fileInput.files[0].name}`;
+                }
+            }
+            
+            document.querySelectorAll('.preview-section-title')[3].nextElementSibling.textContent = 
+                `${skills}\n\nCertificates:\n${certificateText}`;
+        }
+    </script>
+</body>
+</html> 
