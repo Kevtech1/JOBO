@@ -434,20 +434,8 @@
                         <!-- Manage Jobs Section -->
                         <div id="manage-jobs" class="dashboard-section" style="display: none;">
                             <h2 class="mb-4">Manage Job Postings</h2>
-                            <div class="job-card">
-                                <div class="card-body">
-                                    <div class="d-flex justify-content-between align-items-center">
-                                        <div>
-                                            <h5>Senior Software Developer</h5>
-                                            <p class="mb-0">Tech Solutions Ltd</p>
-                                            <small class="text-muted">Posted 5 days ago</small>
-                                        </div>
-                                        <div>
-                                            <button class="btn btn-primary me-2">Edit</button>
-                                            <button class="btn btn-danger">Delete</button>
-                                        </div>
-                                    </div>
-                                </div>
+                            <div id="jobsList">
+                                <!-- Jobs will be loaded here dynamically -->
                             </div>
                         </div>
 
@@ -564,34 +552,56 @@
         // Check if employer is logged in
         function checkEmployerLogin() {
             const isLoggedIn = localStorage.getItem('isEmployerLoggedIn') === 'true';
-            const employerData = JSON.parse(localStorage.getItem('employerData'));
-            if (!isLoggedIn || !employerData) {
+            const employerData = JSON.parse(localStorage.getItem('employerData') || '{}');
+            
+            if (!isLoggedIn || !employerData || !employerData.id) {
                 window.location.href = 'employer-login.html';
-                return;
+                return null;
             }
             return employerData;
         }
 
-        // Load employer's jobs
+        // Function to load jobs
         async function loadJobs() {
             const employerData = checkEmployerLogin();
+            if (!employerData) return;
+
             try {
+                console.log('Loading jobs for employer:', employerData.id);
                 const response = await fetch(`http://localhost:3000/api/employer/jobs/${employerData.id}`);
-                const jobs = await response.json();
                 
-                const jobsContainer = document.querySelector('#manage-jobs .card-body');
-                jobsContainer.innerHTML = jobs.map(job => `
-                    <div class="job-card">
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                const jobs = await response.json();
+                console.log('Loaded jobs:', jobs);
+                
+                const jobsList = document.getElementById('jobsList');
+                if (!jobs || jobs.length === 0) {
+                    jobsList.innerHTML = '<div class="alert alert-info">No jobs posted yet.</div>';
+                    return;
+                }
+
+                jobsList.innerHTML = jobs.map(job => `
+                    <div class="job-card mb-3">
                         <div class="card-body">
                             <div class="d-flex justify-content-between align-items-center">
                                 <div>
                                     <h5>${job.title}</h5>
                                     <p class="mb-0">${job.company}</p>
                                     <small class="text-muted">Posted ${new Date(job.createdAt).toLocaleDateString()}</small>
+                                    <div class="mt-2">
+                                        <span class="badge bg-${getStatusColor(job.status)}">${job.status}</span>
+                                    </div>
                                 </div>
                                 <div>
-                                    <button class="btn btn-primary me-2" onclick="editJob('${job._id}')">Edit</button>
-                                    <button class="btn btn-danger" onclick="deleteJob('${job._id}')">Delete</button>
+                                    <button class="btn btn-primary me-2" onclick="editJob('${job._id}')">
+                                        <i class="fas fa-edit"></i> Edit
+                                    </button>
+                                    <button class="btn btn-danger" onclick="deleteJob('${job._id}')">
+                                        <i class="fas fa-trash"></i> Delete
+                                    </button>
                                 </div>
                             </div>
                         </div>
@@ -599,43 +609,104 @@
                 `).join('');
             } catch (error) {
                 console.error('Error loading jobs:', error);
-                alert('Error loading jobs. Please try again.');
+                const jobsList = document.getElementById('jobsList');
+                jobsList.innerHTML = '<div class="alert alert-danger">Error loading jobs. Please try again.</div>';
             }
         }
 
-        // Load applicants
-        async function loadApplicants() {
-            const employerData = checkEmployerLogin();
+        // Function to get status color for badge
+        function getStatusColor(status) {
+            switch(status) {
+                case 'open': return 'success';
+                case 'closed': return 'danger';
+                case 'draft': return 'warning';
+                case 'on-hold': return 'info';
+                case 'interviewing': return 'primary';
+                default: return 'secondary';
+            }
+        }
+
+        // Function to edit job
+        async function editJob(jobId) {
             try {
-                const response = await fetch(`http://localhost:3000/api/employer/jobs/${employerData.id}/applicants`);
-                const applicants = await response.json();
-                
-                const applicantsContainer = document.querySelector('#applicants .applicant-card');
-                applicantsContainer.innerHTML = applicants.map(applicant => `
-                    <div class="applicant-card">
-                        <div class="d-flex justify-content-between align-items-center">
-                            <div>
-                                <h5>${applicant.firstName} ${applicant.lastName}</h5>
-                                <p class="mb-0">${applicant.email}</p>
-                                <small class="text-muted">Applied: ${new Date(applicant.appliedAt).toLocaleDateString()}</small>
-                            </div>
-                            <div>
-                                <button class="btn btn-primary me-2" onclick="viewApplicantProfile('${applicant._id}')">View Profile</button>
-                                <button class="btn btn-success" onclick="updateApplicantStatus('${applicant._id}', 'accepted')">Accept</button>
-                            </div>
-                        </div>
-                    </div>
-                `).join('');
+                const response = await fetch(`http://localhost:3000/api/employer/jobs/${jobId}`);
+                const job = await response.json();
+
+                // Populate the post job form with job data
+                const form = document.getElementById('postJobForm');
+                form.querySelector('input[name="title"]').value = job.title;
+                form.querySelector('input[name="company"]').value = job.company;
+                form.querySelector('input[name="location"]').value = job.location;
+                form.querySelector('select[name="type"]').value = job.type;
+                form.querySelector('select[name="experienceLevel"]').value = job.experienceLevel;
+                form.querySelector('select[name="status"]').value = job.status;
+                form.querySelector('input[name="salaryMin"]').value = job.salaryMin;
+                form.querySelector('input[name="salaryMax"]').value = job.salaryMax;
+                form.querySelector('textarea[name="description"]').value = job.description;
+
+                // Populate dynamic lists
+                populateDynamicList('responsibilitiesList', job.responsibilities);
+                populateDynamicList('requirementsList', job.requirements);
+                populateDynamicList('benefitsList', job.benefits);
+
+                // Add job ID to form for update
+                form.dataset.jobId = jobId;
+
+                // Switch to post job section
+                document.querySelectorAll('.dashboard-section').forEach(section => {
+                    section.style.display = 'none';
+                });
+                document.getElementById('post-job').style.display = 'block';
+
+                // Update form title and button
+                document.querySelector('#post-job h2').textContent = 'Edit Job';
+                form.querySelector('button[type="submit"]').textContent = 'Update Job';
             } catch (error) {
-                console.error('Error loading applicants:', error);
-                alert('Error loading applicants. Please try again.');
+                console.error('Error loading job details:', error);
+                alert('Error loading job details. Please try again.');
             }
         }
 
-        // Handle job posting form
+        // Function to populate dynamic lists
+        function populateDynamicList(listId, items) {
+            const list = document.getElementById(listId);
+            list.innerHTML = '';
+            items.forEach(item => {
+                const tag = document.createElement('span');
+                tag.className = 'tag';
+                tag.innerHTML = `${item} <span class="remove" onclick="removeTag(this, '${listId}')">&times;</span>`;
+                list.appendChild(tag);
+            });
+        }
+
+        // Function to delete job
+        async function deleteJob(jobId) {
+            if (!confirm('Are you sure you want to delete this job posting?')) {
+                return;
+            }
+
+            try {
+                const response = await fetch(`http://localhost:3000/api/employer/jobs/${jobId}`, {
+                    method: 'DELETE'
+                });
+
+                if (response.ok) {
+                    alert('Job deleted successfully');
+                    loadJobs(); // Refresh the jobs list
+                } else {
+                    const data = await response.json();
+                    alert(data.message || 'Error deleting job');
+                }
+            } catch (error) {
+                console.error('Error deleting job:', error);
+                alert('Error deleting job. Please try again.');
+            }
+        }
+
+        // Update the post job form handler to handle both create and update
         document.getElementById('postJobForm').addEventListener('submit', async function(e) {
             e.preventDefault();
-            const employerData = checkEmployerLogin();
+            const userData = JSON.parse(localStorage.getItem('userData') || '{}');
             
             // Get all items from the dynamic lists
             const getListItems = (listId) => {
@@ -658,12 +729,18 @@
                 responsibilities: getListItems('responsibilitiesList'),
                 requirements: getListItems('requirementsList'),
                 benefits: getListItems('benefitsList'),
-                employerId: employerData.id
+                employerId: userData.employerId
             };
 
+            const jobId = this.dataset.jobId;
+            const url = jobId 
+                ? `http://localhost:3000/api/employer/jobs/${jobId}`
+                : 'http://localhost:3000/api/employer/jobs';
+            const method = jobId ? 'PUT' : 'POST';
+
             try {
-                const response = await fetch('http://localhost:3000/api/employer/jobs', {
-                    method: 'POST',
+                const response = await fetch(url, {
+                    method: method,
                     headers: {
                         'Content-Type': 'application/json'
                     },
@@ -671,54 +748,26 @@
                 });
 
                 if (response.ok) {
-                    alert('Job posted successfully!');
+                    alert(jobId ? 'Job updated successfully!' : 'Job posted successfully!');
                     this.reset();
                     // Clear the dynamic lists
                     document.getElementById('responsibilitiesList').innerHTML = '';
                     document.getElementById('requirementsList').innerHTML = '';
                     document.getElementById('benefitsList').innerHTML = '';
-                    loadJobs(); // Refresh jobs list
+                    // Reset form title and button
+                    document.querySelector('#post-job h2').textContent = 'Post New Job';
+                    this.querySelector('button[type="submit"]').textContent = 'Post Job';
+                    // Remove job ID from form
+                    delete this.dataset.jobId;
+                    // Refresh jobs list
+                    loadJobs();
                 } else {
                     const data = await response.json();
-                    alert(data.message || 'Error posting job');
+                    alert(data.message || (jobId ? 'Error updating job' : 'Error posting job'));
                 }
             } catch (error) {
-                console.error('Error posting job:', error);
-                alert('Error posting job. Please try again.');
-            }
-        });
-
-        // Handle settings form
-        document.getElementById('settingsForm').addEventListener('submit', async function(e) {
-            e.preventDefault();
-            const employerData = checkEmployerLogin();
-            
-            const formData = {
-                companyName: this.querySelector('input[type="text"]').value,
-                companyEmail: this.querySelector('input[type="email"]').value,
-                companyPhone: this.querySelector('input[type="tel"]').value,
-                companyWebsite: this.querySelector('input[type="url"]').value,
-                companyAddress: this.querySelector('textarea').value
-            };
-
-            try {
-                const response = await fetch(`http://localhost:3000/api/employer/${employerData.id}`, {
-                    method: 'PUT',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify(formData)
-                });
-
-                if (response.ok) {
-                    alert('Settings updated successfully!');
-                } else {
-                    const data = await response.json();
-                    alert(data.message || 'Error updating settings');
-                }
-            } catch (error) {
-                console.error('Error updating settings:', error);
-                alert('Error updating settings. Please try again.');
+                console.error('Error:', error);
+                alert(jobId ? 'Error updating job. Please try again.' : 'Error posting job. Please try again.');
             }
         });
 
@@ -788,9 +837,11 @@
 
         // Initialize dashboard
         window.addEventListener('load', function() {
-            checkEmployerLogin();
-            initializeCharts();
-            loadJobs(); // Load initial jobs data
+            const employerData = checkEmployerLogin();
+            if (employerData) {
+                initializeCharts();
+                loadJobs(); // Load initial jobs data
+            }
         });
 
         // Replace the existing tag-related functions with the new implementation
