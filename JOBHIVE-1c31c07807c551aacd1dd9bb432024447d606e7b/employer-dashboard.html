@@ -628,26 +628,40 @@
 
         // Function to edit job
         async function editJob(jobId) {
+            const employerData = checkEmployerLogin();
+            if (!employerData) return;
+
             try {
-                const response = await fetch(`http://localhost:3000/api/employer/jobs/${jobId}`);
+                console.log('Fetching job details for:', jobId);
+                const response = await fetch(`http://localhost:3000/api/employer/jobs/${jobId}`, {
+                    headers: {
+                        'Authorization': `Bearer ${localStorage.getItem('employerToken')}`
+                    }
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
                 const job = await response.json();
+                console.log('Job details loaded:', job);
 
                 // Populate the post job form with job data
                 const form = document.getElementById('postJobForm');
-                form.querySelector('input[name="title"]').value = job.title;
-                form.querySelector('input[name="company"]').value = job.company;
-                form.querySelector('input[name="location"]').value = job.location;
-                form.querySelector('select[name="type"]').value = job.type;
-                form.querySelector('select[name="experienceLevel"]').value = job.experienceLevel;
-                form.querySelector('select[name="status"]').value = job.status;
-                form.querySelector('input[name="salaryMin"]').value = job.salaryMin;
-                form.querySelector('input[name="salaryMax"]').value = job.salaryMax;
-                form.querySelector('textarea[name="description"]').value = job.description;
+                form.querySelector('input[name="title"]').value = job.title || '';
+                form.querySelector('input[name="company"]').value = job.company || '';
+                form.querySelector('input[name="location"]').value = job.location || '';
+                form.querySelector('select[name="type"]').value = job.type || '';
+                form.querySelector('select[name="experienceLevel"]').value = job.experienceLevel || '';
+                form.querySelector('select[name="status"]').value = job.status || '';
+                form.querySelector('input[name="salaryMin"]').value = job.salaryMin || '';
+                form.querySelector('input[name="salaryMax"]').value = job.salaryMax || '';
+                form.querySelector('textarea[name="description"]').value = job.description || '';
 
                 // Populate dynamic lists
-                populateDynamicList('responsibilitiesList', job.responsibilities);
-                populateDynamicList('requirementsList', job.requirements);
-                populateDynamicList('benefitsList', job.benefits);
+                populateDynamicList('responsibilitiesList', job.responsibilities || []);
+                populateDynamicList('requirementsList', job.requirements || []);
+                populateDynamicList('benefitsList', job.benefits || []);
 
                 // Add job ID to form for update
                 form.dataset.jobId = jobId;
@@ -706,7 +720,8 @@
         // Update the post job form handler to handle both create and update
         document.getElementById('postJobForm').addEventListener('submit', async function(e) {
             e.preventDefault();
-            const userData = JSON.parse(localStorage.getItem('userData') || '{}');
+            const employerData = checkEmployerLogin();
+            if (!employerData) return;
             
             // Get all items from the dynamic lists
             const getListItems = (listId) => {
@@ -729,7 +744,7 @@
                 responsibilities: getListItems('responsibilitiesList'),
                 requirements: getListItems('requirementsList'),
                 benefits: getListItems('benefitsList'),
-                employerId: userData.employerId
+                employerId: employerData.id
             };
 
             const jobId = this.dataset.jobId;
@@ -742,7 +757,8 @@
                 const response = await fetch(url, {
                     method: method,
                     headers: {
-                        'Content-Type': 'application/json'
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${localStorage.getItem('employerToken')}`
                     },
                     body: JSON.stringify(formData)
                 });
@@ -759,6 +775,11 @@
                     this.querySelector('button[type="submit"]').textContent = 'Post Job';
                     // Remove job ID from form
                     delete this.dataset.jobId;
+                    // Switch back to manage jobs section
+                    document.querySelectorAll('.dashboard-section').forEach(section => {
+                        section.style.display = 'none';
+                    });
+                    document.getElementById('manage-jobs').style.display = 'block';
                     // Refresh jobs list
                     loadJobs();
                 } else {
