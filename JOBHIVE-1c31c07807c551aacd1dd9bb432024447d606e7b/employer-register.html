@@ -247,5 +247,46 @@
     </footer>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        document.querySelector('form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const formData = {
+                companyName: document.querySelector('input[type="text"]').value,
+                registrationNumber: document.querySelector('input[type="text"]:nth-child(2)').value,
+                companyEmail: document.querySelector('input[type="email"]').value,
+                companyPhone: document.querySelector('input[type="tel"]').value,
+                companyWebsite: document.querySelector('input[type="url"]').value,
+                companyAddress: document.querySelector('textarea').value,
+                contactName: document.querySelectorAll('input[type="text"]')[2].value,
+                contactPosition: document.querySelectorAll('input[type="text"]')[3].value,
+                contactEmail: document.querySelectorAll('input[type="email"]')[1].value,
+                contactPhone: document.querySelectorAll('input[type="tel"]')[1].value,
+                password: document.querySelector('input[type="password"]').value
+            };
+
+            try {
+                const response = await fetch('http://localhost:3000/api/employer/register', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(formData)
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    alert('Registration successful! Please login.');
+                    window.location.href = 'employer-login.html';
+                } else {
+                    alert(data.message || 'Registration failed. Please try again.');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('An error occurred during registration. Please try again.');
+            }
+        });
+    </script>
 </body>
 </html> 

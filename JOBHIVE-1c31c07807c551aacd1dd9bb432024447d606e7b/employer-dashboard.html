@@ -1,0 +1,751 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Employer Dashboard - JobHive Kenya</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        :root {
+            --primary-color: #2c3e50;
+            --secondary-color: #3498db;
+            --accent-color: #e74c3c;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f8f9fa;
+        }
+
+        .navbar {
+            background-color: var(--primary-color);
+            padding: 1rem 0;
+        }
+
+        .navbar-brand {
+            color: white !important;
+            font-weight: bold;
+            font-size: 1.5rem;
+        }
+
+        .nav-link {
+            color: white !important;
+            position: relative;
+            padding: 0.5rem 1rem;
+        }
+
+        .nav-link.active {
+            color: var(--secondary-color) !important;
+        }
+
+        .dashboard-container {
+            padding: 2rem 0;
+        }
+
+        .sidebar {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 15px rgba(0,0,0,0.1);
+            padding: 1.5rem;
+            height: 100%;
+        }
+
+        .sidebar-menu {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .sidebar-menu li {
+            margin-bottom: 0.5rem;
+        }
+
+        .sidebar-menu a {
+            color: var(--primary-color);
+            text-decoration: none;
+            padding: 0.75rem 1rem;
+            display: block;
+            border-radius: 5px;
+            transition: all 0.3s;
+        }
+
+        .sidebar-menu a:hover,
+        .sidebar-menu a.active {
+            background-color: var(--secondary-color);
+            color: white;
+        }
+
+        .sidebar-menu i {
+            margin-right: 10px;
+            width: 20px;
+        }
+
+        .main-content {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 15px rgba(0,0,0,0.1);
+            padding: 2rem;
+        }
+
+        .stats-card {
+            background: linear-gradient(45deg, var(--secondary-color), #2980b9);
+            color: white;
+            border-radius: 10px;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .stats-card h3 {
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .job-card {
+            border: none;
+            border-radius: 10px;
+            box-shadow: 0 2px 15px rgba(0,0,0,0.1);
+            margin-bottom: 1rem;
+            transition: transform 0.3s;
+        }
+
+        .job-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .applicant-card {
+            border: none;
+            border-radius: 10px;
+            box-shadow: 0 2px 15px rgba(0,0,0,0.1);
+            margin-bottom: 1rem;
+            padding: 1rem;
+        }
+
+        .btn-primary {
+            background-color: var(--secondary-color);
+            border-color: var(--secondary-color);
+        }
+
+        .btn-primary:hover {
+            background-color: #2980b9;
+            border-color: #2980b9;
+        }
+
+        .footer {
+            background-color: var(--primary-color);
+            color: white;
+            padding: 50px 0;
+            margin-top: 50px;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark">
+        <div class="container">
+            <a class="navbar-brand" href="index.html">
+                <i class="fas fa-briefcase"></i> JobHive Kenya
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="index.html">Home</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="jobs.html">Jobs</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="employer-dashboard.html">Dashboard</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#" id="logoutBtn">Logout</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Dashboard Content -->
+    <div class="dashboard-container">
+        <div class="container">
+            <div class="row">
+                <!-- Sidebar -->
+                <div class="col-md-3">
+                    <div class="sidebar">
+                        <h4 class="mb-4">Dashboard Menu</h4>
+                        <ul class="sidebar-menu">
+                            <li>
+                                <a href="#" class="active" data-section="overview">
+                                    <i class="fas fa-home"></i> Overview
+                                </a>
+                            </li>
+                            <li>
+                                <a href="#" data-section="post-job">
+                                    <i class="fas fa-plus-circle"></i> Post New Job
+                                </a>
+                            </li>
+                            <li>
+                                <a href="#" data-section="manage-jobs">
+                                    <i class="fas fa-briefcase"></i> Manage Jobs
+                                </a>
+                            </li>
+                            <li>
+                                <a href="#" data-section="applicants">
+                                    <i class="fas fa-users"></i> Applicants
+                                </a>
+                            </li>
+                            <li>
+                                <a href="#" data-section="analytics">
+                                    <i class="fas fa-chart-bar"></i> Analytics
+                                </a>
+                            </li>
+                            <li>
+                                <a href="#" data-section="settings">
+                                    <i class="fas fa-cog"></i> Settings
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Main Content -->
+                <div class="col-md-9">
+                    <div class="main-content">
+                        <!-- Overview Section -->
+                        <div id="overview" class="dashboard-section">
+                            <h2 class="mb-4">Dashboard Overview</h2>
+                            <div class="row">
+                                <div class="col-md-4">
+                                    <div class="stats-card">
+                                        <h3>12</h3>
+                                        <p>Active Job Postings</p>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="stats-card">
+                                        <h3>156</h3>
+                                        <p>Total Applicants</p>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="stats-card">
+                                        <h3>45</h3>
+                                        <p>New Applications</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <h3 class="mt-4 mb-3">Recent Applications</h3>
+                            <div class="applicant-card">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <h5>John Doe</h5>
+                                        <p class="mb-0">Software Developer</p>
+                                        <small class="text-muted">Applied 2 days ago</small>
+                                    </div>
+                                    <button class="btn btn-primary">View Profile</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Post Job Section -->
+                        <div id="post-job" class="dashboard-section" style="display: none;">
+                            <h2 class="mb-4">Post New Job</h2>
+                            <form id="postJobForm">
+                                <div class="mb-3">
+                                    <label class="form-label">Job Title</label>
+                                    <input type="text" class="form-control" name="title" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">Company Name</label>
+                                    <input type="text" class="form-control" name="company" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">Location</label>
+                                    <input type="text" class="form-control" name="location" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">Job Type</label>
+                                    <select class="form-select" name="type" required>
+                                        <option value="">Select Job Type</option>
+                                        <option value="full-time">Full Time</option>
+                                        <option value="part-time">Part Time</option>
+                                        <option value="contract">Contract</option>
+                                        <option value="internship">Internship</option>
+                                    </select>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">Experience Level</label>
+                                    <select class="form-select" name="experienceLevel" required>
+                                        <option value="">Select Experience Level</option>
+                                        <option value="entry-level">Entry Level</option>
+                                        <option value="mid-level">Mid Level</option>
+                                        <option value="senior">Senior Level</option>
+                                        <option value="lead">Lead</option>
+                                        <option value="manager">Manager</option>
+                                    </select>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">Salary Range (KSh)</label>
+                                    <div class="row">
+                                        <div class="col">
+                                            <input type="number" class="form-control" name="salaryMin" placeholder="Minimum" required>
+                                        </div>
+                                        <div class="col">
+                                            <input type="number" class="form-control" name="salaryMax" placeholder="Maximum" required>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">Job Description</label>
+                                    <textarea class="form-control" name="description" rows="5" required></textarea>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">Key Responsibilities</label>
+                                    <div id="responsibilitiesList" class="mb-2">
+                                        <!-- Responsibilities will be added here dynamically -->
+                                    </div>
+                                    <div class="input-group">
+                                        <input type="text" class="form-control" id="newResponsibility" placeholder="Add a responsibility">
+                                        <button class="btn btn-outline-primary" type="button" onclick="addItem('responsibilities')">Add</button>
+                                    </div>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">Requirements</label>
+                                    <div id="requirementsList" class="mb-2">
+                                        <!-- Requirements will be added here dynamically -->
+                                    </div>
+                                    <div class="input-group">
+                                        <input type="text" class="form-control" id="newRequirement" placeholder="Add a requirement">
+                                        <button class="btn btn-outline-primary" type="button" onclick="addItem('requirements')">Add</button>
+                                    </div>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">Benefits</label>
+                                    <div id="benefitsList" class="mb-2">
+                                        <!-- Benefits will be added here dynamically -->
+                                    </div>
+                                    <div class="input-group">
+                                        <input type="text" class="form-control" id="newBenefit" placeholder="Add a benefit">
+                                        <button class="btn btn-outline-primary" type="button" onclick="addItem('benefits')">Add</button>
+                                    </div>
+                                </div>
+                                
+                                <button type="submit" class="btn btn-primary">Post Job</button>
+                            </form>
+                        </div>
+
+                        <!-- Manage Jobs Section -->
+                        <div id="manage-jobs" class="dashboard-section" style="display: none;">
+                            <h2 class="mb-4">Manage Job Postings</h2>
+                            <div class="job-card">
+                                <div class="card-body">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <div>
+                                            <h5>Senior Software Developer</h5>
+                                            <p class="mb-0">Tech Solutions Ltd</p>
+                                            <small class="text-muted">Posted 5 days ago</small>
+                                        </div>
+                                        <div>
+                                            <button class="btn btn-primary me-2">Edit</button>
+                                            <button class="btn btn-danger">Delete</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Applicants Section -->
+                        <div id="applicants" class="dashboard-section" style="display: none;">
+                            <h2 class="mb-4">Applicants</h2>
+                            <div class="applicant-card">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <h5>John Doe</h5>
+                                        <p class="mb-0">Software Developer</p>
+                                        <small class="text-muted">Applied for: Senior Software Developer</small>
+                                    </div>
+                                    <div>
+                                        <button class="btn btn-primary me-2">View Profile</button>
+                                        <button class="btn btn-success">Accept</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Analytics Section -->
+                        <div id="analytics" class="dashboard-section" style="display: none;">
+                            <h2 class="mb-4">Job Performance Analytics</h2>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="card">
+                                        <div class="card-body">
+                                            <h5>Applications Over Time</h5>
+                                            <canvas id="applicationsChart"></canvas>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="card">
+                                        <div class="card-body">
+                                            <h5>Applicant Demographics</h5>
+                                            <canvas id="demographicsChart"></canvas>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Settings Section -->
+                        <div id="settings" class="dashboard-section" style="display: none;">
+                            <h2 class="mb-4">Account Settings</h2>
+                            <form id="settingsForm">
+                                <div class="mb-3">
+                                    <label class="form-label">Company Name</label>
+                                    <input type="text" class="form-control" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">Company Email</label>
+                                    <input type="email" class="form-control" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">Company Phone</label>
+                                    <input type="tel" class="form-control" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">Company Website</label>
+                                    <input type="url" class="form-control" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">Company Address</label>
+                                    <textarea class="form-control" rows="3" required></textarea>
+                                </div>
+                                <button type="submit" class="btn btn-primary">Save Changes</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-4">
+                    <h5>About JobHive Kenya</h5>
+                    <p>Connecting Kenyan youth with meaningful employment opportunities.</p>
+                </div>
+                <div class="col-md-4">
+                    <h5>Quick Links</h5>
+                    <ul class="list-unstyled">
+                        <li><a href="#" class="text-white">About Us</a></li>
+                        <li><a href="#" class="text-white">Contact</a></li>
+                        <li><a href="#" class="text-white">Privacy Policy</a></li>
+                        <li><a href="#" class="text-white">Terms of Service</a></li>
+                    </ul>
+                </div>
+                <div class="col-md-4">
+                    <h5>Connect With Us</h5>
+                    <div class="social-links">
+                        <a href="#" class="text-white me-3"><i class="fab fa-facebook"></i></a>
+                        <a href="#" class="text-white me-3"><i class="fab fa-twitter"></i></a>
+                        <a href="#" class="text-white me-3"><i class="fab fa-linkedin"></i></a>
+                    </div>
+                </div>
+            </div>
+            <hr class="mt-4">
+            <div class="text-center">
+                <p>&copy; 2024 JobHive Kenya. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        // Check if employer is logged in
+        function checkEmployerLogin() {
+            const isLoggedIn = localStorage.getItem('isEmployerLoggedIn') === 'true';
+            const employerData = JSON.parse(localStorage.getItem('employerData'));
+            if (!isLoggedIn || !employerData) {
+                window.location.href = 'employer-login.html';
+                return;
+            }
+            return employerData;
+        }
+
+        // Load employer's jobs
+        async function loadJobs() {
+            const employerData = checkEmployerLogin();
+            try {
+                const response = await fetch(`http://localhost:3000/api/employer/jobs/${employerData.id}`);
+                const jobs = await response.json();
+                
+                const jobsContainer = document.querySelector('#manage-jobs .card-body');
+                jobsContainer.innerHTML = jobs.map(job => `
+                    <div class="job-card">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <h5>${job.title}</h5>
+                                    <p class="mb-0">${job.company}</p>
+                                    <small class="text-muted">Posted ${new Date(job.createdAt).toLocaleDateString()}</small>
+                                </div>
+                                <div>
+                                    <button class="btn btn-primary me-2" onclick="editJob('${job._id}')">Edit</button>
+                                    <button class="btn btn-danger" onclick="deleteJob('${job._id}')">Delete</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `).join('');
+            } catch (error) {
+                console.error('Error loading jobs:', error);
+                alert('Error loading jobs. Please try again.');
+            }
+        }
+
+        // Load applicants
+        async function loadApplicants() {
+            const employerData = checkEmployerLogin();
+            try {
+                const response = await fetch(`http://localhost:3000/api/employer/jobs/${employerData.id}/applicants`);
+                const applicants = await response.json();
+                
+                const applicantsContainer = document.querySelector('#applicants .applicant-card');
+                applicantsContainer.innerHTML = applicants.map(applicant => `
+                    <div class="applicant-card">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h5>${applicant.firstName} ${applicant.lastName}</h5>
+                                <p class="mb-0">${applicant.email}</p>
+                                <small class="text-muted">Applied: ${new Date(applicant.appliedAt).toLocaleDateString()}</small>
+                            </div>
+                            <div>
+                                <button class="btn btn-primary me-2" onclick="viewApplicantProfile('${applicant._id}')">View Profile</button>
+                                <button class="btn btn-success" onclick="updateApplicantStatus('${applicant._id}', 'accepted')">Accept</button>
+                            </div>
+                        </div>
+                    </div>
+                `).join('');
+            } catch (error) {
+                console.error('Error loading applicants:', error);
+                alert('Error loading applicants. Please try again.');
+            }
+        }
+
+        // Handle job posting form
+        document.getElementById('postJobForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const employerData = checkEmployerLogin();
+            
+            // Get all items from the dynamic lists
+            const getListItems = (listId) => {
+                const list = document.getElementById(listId);
+                return Array.from(list.querySelectorAll('input[type="text"]'))
+                    .map(input => input.value.trim())
+                    .filter(value => value);
+            };
+            
+            const formData = {
+                title: this.querySelector('input[name="title"]').value,
+                company: this.querySelector('input[name="company"]').value,
+                location: this.querySelector('input[name="location"]').value,
+                type: this.querySelector('select[name="type"]').value,
+                experienceLevel: this.querySelector('select[name="experienceLevel"]').value,
+                salaryMin: this.querySelector('input[name="salaryMin"]').value,
+                salaryMax: this.querySelector('input[name="salaryMax"]').value,
+                description: this.querySelector('textarea[name="description"]').value,
+                responsibilities: getListItems('responsibilitiesList'),
+                requirements: getListItems('requirementsList'),
+                benefits: getListItems('benefitsList'),
+                employerId: employerData.id
+            };
+
+            try {
+                const response = await fetch('http://localhost:3000/api/employer/jobs', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(formData)
+                });
+
+                if (response.ok) {
+                    alert('Job posted successfully!');
+                    this.reset();
+                    // Clear the dynamic lists
+                    document.getElementById('responsibilitiesList').innerHTML = '';
+                    document.getElementById('requirementsList').innerHTML = '';
+                    document.getElementById('benefitsList').innerHTML = '';
+                    loadJobs(); // Refresh jobs list
+                } else {
+                    const data = await response.json();
+                    alert(data.message || 'Error posting job');
+                }
+            } catch (error) {
+                console.error('Error posting job:', error);
+                alert('Error posting job. Please try again.');
+            }
+        });
+
+        // Handle settings form
+        document.getElementById('settingsForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const employerData = checkEmployerLogin();
+            
+            const formData = {
+                companyName: this.querySelector('input[type="text"]').value,
+                companyEmail: this.querySelector('input[type="email"]').value,
+                companyPhone: this.querySelector('input[type="tel"]').value,
+                companyWebsite: this.querySelector('input[type="url"]').value,
+                companyAddress: this.querySelector('textarea').value
+            };
+
+            try {
+                const response = await fetch(`http://localhost:3000/api/employer/${employerData.id}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(formData)
+                });
+
+                if (response.ok) {
+                    alert('Settings updated successfully!');
+                } else {
+                    const data = await response.json();
+                    alert(data.message || 'Error updating settings');
+                }
+            } catch (error) {
+                console.error('Error updating settings:', error);
+                alert('Error updating settings. Please try again.');
+            }
+        });
+
+        // Handle sidebar navigation
+        document.querySelectorAll('.sidebar-menu a').forEach(link => {
+            link.addEventListener('click', function(e) {
+                e.preventDefault();
+                
+                // Update active state
+                document.querySelectorAll('.sidebar-menu a').forEach(a => a.classList.remove('active'));
+                this.classList.add('active');
+
+                // Show selected section
+                const sectionId = this.getAttribute('data-section');
+                document.querySelectorAll('.dashboard-section').forEach(section => {
+                    section.style.display = 'none';
+                });
+                document.getElementById(sectionId).style.display = 'block';
+
+                // Load section-specific data
+                if (sectionId === 'manage-jobs') {
+                    loadJobs();
+                } else if (sectionId === 'applicants') {
+                    loadApplicants();
+                }
+            });
+        });
+
+        // Handle logout
+        document.getElementById('logoutBtn').addEventListener('click', function(e) {
+            e.preventDefault();
+            localStorage.removeItem('isEmployerLoggedIn');
+            localStorage.removeItem('employerData');
+            window.location.href = 'index.html';
+        });
+
+        // Initialize charts
+        function initializeCharts() {
+            // Applications Over Time Chart
+            const applicationsCtx = document.getElementById('applicationsChart').getContext('2d');
+            new Chart(applicationsCtx, {
+                type: 'line',
+                data: {
+                    labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+                    datasets: [{
+                        label: 'Applications',
+                        data: [65, 59, 80, 81, 56, 55],
+                        borderColor: '#3498db',
+                        tension: 0.1
+                    }]
+                }
+            });
+
+            // Demographics Chart
+            const demographicsCtx = document.getElementById('demographicsChart').getContext('2d');
+            new Chart(demographicsCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Male', 'Female', 'Other'],
+                    datasets: [{
+                        data: [60, 35, 5],
+                        backgroundColor: ['#3498db', '#e74c3c', '#2ecc71']
+                    }]
+                }
+            });
+        }
+
+        // Initialize dashboard
+        window.addEventListener('load', function() {
+            checkEmployerLogin();
+            initializeCharts();
+            loadJobs(); // Load initial jobs data
+        });
+
+        // Add these new functions for handling dynamic lists
+        function addItem(type) {
+            const input = document.getElementById(`new${type.charAt(0).toUpperCase() + type.slice(1)}`);
+            const list = document.getElementById(`${type}List`);
+            const value = input.value.trim();
+            
+            if (value) {
+                const itemDiv = document.createElement('div');
+                itemDiv.className = 'd-flex align-items-center mb-2';
+                itemDiv.innerHTML = `
+                    <div class="flex-grow-1 me-2">
+                        <input type="text" class="form-control" value="${value}" readonly>
+                    </div>
+                    <button class="btn btn-outline-danger btn-sm" onclick="removeItem(this)">
+                        <i class="fas fa-times"></i>
+                    </button>
+                `;
+                list.appendChild(itemDiv);
+                input.value = '';
+            }
+        }
+
+        function removeItem(button) {
+            button.closest('.d-flex').remove();
+        }
+
+        // Add event listeners for Enter key in input fields
+        document.getElementById('newResponsibility').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                addItem('responsibilities');
+            }
+        });
+
+        document.getElementById('newRequirement').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                addItem('requirements');
+            }
+        });
+
+        document.getElementById('newBenefit').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                addItem('benefits');
+            }
+        });
+    </script>
+</body>
+</html> 

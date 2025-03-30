@@ -197,7 +197,7 @@
                     <h1>Welcome Back</h1>
                     <p>Sign in to your JobHive Kenya account</p>
                 </div>
-                <form>
+                <form id="loginForm">
                     <div class="mb-3">
                         <label for="email" class="form-label">Email Address</label>
                         <input type="email" class="form-control" id="email" required>
@@ -271,5 +271,39 @@
     </footer>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        document.getElementById('loginForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const formData = {
+                email: document.getElementById('email').value,
+                password: document.getElementById('password').value
+            };
+
+            try {
+                const response = await fetch('http://localhost:3000/api/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(formData)
+                });
+
+                const data = await response.json();
+                
+                if (response.ok) {
+                    // Store user data in localStorage
+                    localStorage.setItem('isLoggedIn', 'true');
+                    localStorage.setItem('userData', JSON.stringify(data.user));
+                    window.location.href = 'index.html';
+                } else {
+                    alert(data.message || 'Login failed. Please try again.');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('An error occurred. Please try again.');
+            }
+        });
+    </script>
 </body>
 </html> 
