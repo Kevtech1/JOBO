@@ -367,8 +367,157 @@
             }
         }
 
-        // Run check when page loads
-        window.addEventListener('load', checkLoginStatus);
+        // Function to format salary
+        function formatSalary(min, max) {
+            return `KSh ${min.toLocaleString()} - ${max.toLocaleString()}`;
+        }
+
+        // Function to load jobs
+        async function loadJobs() {
+            try {
+                const response = await fetch('http://localhost:3000/api/jobs');
+                const jobs = await response.json();
+                
+                const jobsContainer = document.querySelector('.col-12');
+                const jobsList = jobs.map(job => `
+                    <div class="card job-card">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div>
+                                    <h5 class="card-title">${job.title}</h5>
+                                    <p class="card-text text-muted">${job.company}</p>
+                                    <div class="mb-2">
+                                        <span class="job-tag"><i class="fas fa-map-marker-alt"></i> ${job.location}</span>
+                                        <span class="job-tag"><i class="fas fa-clock"></i> ${job.type}</span>
+                                        <span class="job-tag"><i class="fas fa-briefcase"></i> ${job.experienceLevel}</span>
+                                    </div>
+                                    <p class="card-text">${job.description}</p>
+                                </div>
+                                <div class="text-end">
+                                    <div class="salary mb-2">${formatSalary(job.salaryMin, job.salaryMax)}</div>
+                                    <div class="d-flex gap-2">
+                                        <a href="job-details.html?id=${job._id}" class="btn btn-outline-secondary">View Details</a>
+                                        <button class="btn btn-outline-primary" onclick="applyForJob('${job._id}')">Apply Now</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `).join('');
+
+                // Update the jobs count
+                document.querySelector('.d-flex.justify-content-between.align-items-center.mb-4 h4').textContent = 
+                    `Showing ${jobs.length} Jobs`;
+
+                // Replace the static job cards with dynamic ones
+                const jobCardsContainer = document.querySelector('.col-12');
+                jobCardsContainer.innerHTML = `
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <h4>Showing ${jobs.length} Jobs</h4>
+                        <select class="form-select w-auto" id="sortSelect">
+                            <option value="recent">Most Recent</option>
+                            <option value="salary-high">Salary: High to Low</option>
+                            <option value="salary-low">Salary: Low to High</option>
+                        </select>
+                    </div>
+                    ${jobsList}
+                `;
+
+                // Add event listener for sorting
+                document.getElementById('sortSelect').addEventListener('change', function(e) {
+                    const sortedJobs = [...jobs];
+                    switch(e.target.value) {
+                        case 'salary-high':
+                            sortedJobs.sort((a, b) => b.salaryMax - a.salaryMax);
+                            break;
+                        case 'salary-low':
+                            sortedJobs.sort((a, b) => a.salaryMin - b.salaryMin);
+                            break;
+                        case 'recent':
+                            sortedJobs.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+                            break;
+                    }
+                    // Re-render jobs with new order
+                    const sortedJobsList = sortedJobs.map(job => `
+                        <div class="card job-card">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between align-items-start">
+                                    <div>
+                                        <h5 class="card-title">${job.title}</h5>
+                                        <p class="card-text text-muted">${job.company}</p>
+                                        <div class="mb-2">
+                                            <span class="job-tag"><i class="fas fa-map-marker-alt"></i> ${job.location}</span>
+                                            <span class="job-tag"><i class="fas fa-clock"></i> ${job.type}</span>
+                                            <span class="job-tag"><i class="fas fa-briefcase"></i> ${job.experienceLevel}</span>
+                                        </div>
+                                        <p class="card-text">${job.description}</p>
+                                    </div>
+                                    <div class="text-end">
+                                        <div class="salary mb-2">${formatSalary(job.salaryMin, job.salaryMax)}</div>
+                                        <div class="d-flex gap-2">
+                                            <a href="job-details.html?id=${job._id}" class="btn btn-outline-secondary">View Details</a>
+                                            <button class="btn btn-outline-primary" onclick="applyForJob('${job._id}')">Apply Now</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    `).join('');
+                    jobCardsContainer.innerHTML = `
+                        <div class="d-flex justify-content-between align-items-center mb-4">
+                            <h4>Showing ${sortedJobs.length} Jobs</h4>
+                            <select class="form-select w-auto" id="sortSelect">
+                                <option value="recent">Most Recent</option>
+                                <option value="salary-high">Salary: High to Low</option>
+                                <option value="salary-low">Salary: Low to High</option>
+                            </select>
+                        </div>
+                        ${sortedJobsList}
+                    `;
+                });
+            } catch (error) {
+                console.error('Error loading jobs:', error);
+                alert('Error loading jobs. Please try again.');
+            }
+        }
+
+        // Function to handle job application
+        async function applyForJob(jobId) {
+            const userData = JSON.parse(localStorage.getItem('userData'));
+            if (!userData) {
+                alert('Please log in to apply for jobs');
+                window.location.href = 'login.html';
+                return;
+            }
+
+            try {
+                const response = await fetch(`http://localhost:3000/api/jobs/${jobId}/apply`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        userId: userData.id
+                    })
+                });
+
+                const data = await response.json();
+                if (response.ok) {
+                    alert('Application submitted successfully!');
+                } else {
+                    alert(data.message || 'Error applying for job');
+                }
+            } catch (error) {
+                console.error('Error applying for job:', error);
+                alert('Error applying for job. Please try again.');
+            }
+        }
+
+        // Run when page loads
+        window.addEventListener('load', function() {
+            checkLoginStatus();
+            loadJobs();
+        });
     </script>
 </body>
 </html> 

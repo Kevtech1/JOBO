@@ -137,6 +137,88 @@
             padding: 50px 0;
             margin-top: 50px;
         }
+
+        .dynamic-list {
+            max-height: 200px;
+            overflow-y: auto;
+            margin-bottom: 10px;
+        }
+
+        .dynamic-list-item {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 8px 12px;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .dynamic-list-item:hover {
+            background-color: #e9ecef;
+        }
+
+        .remove-item {
+            color: #dc3545;
+            cursor: pointer;
+            padding: 4px 8px;
+            border-radius: 4px;
+            transition: background-color 0.2s;
+        }
+
+        .remove-item:hover {
+            background-color: #dc3545;
+            color: white;
+        }
+
+        .tag-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            padding: 8px;
+            min-height: 40px;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            margin-bottom: 10px;
+            background-color: #fff;
+        }
+
+        .tag {
+            display: inline-flex;
+            align-items: center;
+            background-color: #e9ecef;
+            border: 1px solid #dee2e6;
+            border-radius: 20px;
+            padding: 4px 12px;
+            margin: 2px;
+            font-size: 0.9rem;
+            color: #495057;
+        }
+
+        .tag .remove-tag {
+            margin-left: 8px;
+            color: #dc3545;
+            cursor: pointer;
+            font-size: 0.8rem;
+            padding: 2px 6px;
+            border-radius: 50%;
+            transition: all 0.2s;
+        }
+
+        .tag .remove-tag:hover {
+            background-color: #dc3545;
+            color: white;
+        }
+
+        .tag-input {
+            flex: 1;
+            min-width: 120px;
+            border: none;
+            outline: none;
+            padding: 4px 8px;
+            font-size: 0.9rem;
+        }
     </style>
 </head>
 <body>
@@ -305,32 +387,32 @@
                                 </div>
                                 <div class="mb-3">
                                     <label class="form-label">Key Responsibilities</label>
-                                    <div id="responsibilitiesList" class="mb-2">
-                                        <!-- Responsibilities will be added here dynamically -->
+                                    <div id="responsibilitiesList" class="tag-container">
+                                        <!-- Tags will be added here dynamically -->
                                     </div>
                                     <div class="input-group">
-                                        <input type="text" class="form-control" id="newResponsibility" placeholder="Add a responsibility">
-                                        <button class="btn btn-outline-primary" type="button" onclick="addItem('responsibilities')">Add</button>
+                                        <input type="text" class="form-control" id="newResponsibility" placeholder="Type and press Enter or click Add">
+                                        <button class="btn btn-outline-primary" type="button" id="addResponsibility">Add</button>
                                     </div>
                                 </div>
                                 <div class="mb-3">
                                     <label class="form-label">Requirements</label>
-                                    <div id="requirementsList" class="mb-2">
-                                        <!-- Requirements will be added here dynamically -->
+                                    <div id="requirementsList" class="tag-container">
+                                        <!-- Tags will be added here dynamically -->
                                     </div>
                                     <div class="input-group">
-                                        <input type="text" class="form-control" id="newRequirement" placeholder="Add a requirement">
-                                        <button class="btn btn-outline-primary" type="button" onclick="addItem('requirements')">Add</button>
+                                        <input type="text" class="form-control" id="newRequirement" placeholder="Type and press Enter or click Add">
+                                        <button class="btn btn-outline-primary" type="button" id="addRequirement">Add</button>
                                     </div>
                                 </div>
                                 <div class="mb-3">
                                     <label class="form-label">Benefits</label>
-                                    <div id="benefitsList" class="mb-2">
-                                        <!-- Benefits will be added here dynamically -->
+                                    <div id="benefitsList" class="tag-container">
+                                        <!-- Tags will be added here dynamically -->
                                     </div>
                                     <div class="input-group">
-                                        <input type="text" class="form-control" id="newBenefit" placeholder="Add a benefit">
-                                        <button class="btn btn-outline-primary" type="button" onclick="addItem('benefits')">Add</button>
+                                        <input type="text" class="form-control" id="newBenefit" placeholder="Type and press Enter or click Add">
+                                        <button class="btn btn-outline-primary" type="button" id="addBenefit">Add</button>
                                     </div>
                                 </div>
                                 
@@ -547,8 +629,8 @@
             // Get all items from the dynamic lists
             const getListItems = (listId) => {
                 const list = document.getElementById(listId);
-                return Array.from(list.querySelectorAll('input[type="text"]'))
-                    .map(input => input.value.trim())
+                return Array.from(list.querySelectorAll('.tag'))
+                    .map(tag => tag.textContent.trim().replace('×', '').trim())
                     .filter(value => value);
             };
             
@@ -699,52 +781,74 @@
             loadJobs(); // Load initial jobs data
         });
 
-        // Add these new functions for handling dynamic lists
-        function addItem(type) {
-            const input = document.getElementById(`new${type.charAt(0).toUpperCase() + type.slice(1)}`);
-            const list = document.getElementById(`${type}List`);
-            const value = input.value.trim();
-            
-            if (value) {
-                const itemDiv = document.createElement('div');
-                itemDiv.className = 'd-flex align-items-center mb-2';
-                itemDiv.innerHTML = `
-                    <div class="flex-grow-1 me-2">
-                        <input type="text" class="form-control" value="${value}" readonly>
-                    </div>
-                    <button class="btn btn-outline-danger btn-sm" onclick="removeItem(this)">
-                        <i class="fas fa-times"></i>
-                    </button>
-                `;
-                list.appendChild(itemDiv);
-                input.value = '';
-            }
-        }
+        // Replace the existing tag-related functions with the new implementation
+        document.addEventListener("DOMContentLoaded", function () {
+            // Function to handle adding tags
+            function addTag(inputId, listId) {
+                const inputField = document.getElementById(inputId);
+                const listContainer = document.getElementById(listId);
+                const value = inputField.value.trim();
 
-        function removeItem(button) {
-            button.closest('.d-flex').remove();
-        }
+                if (value !== "") {
+                    // Check if the tag already exists
+                    if ([...listContainer.children].some(tag => tag.textContent.includes(value))) {
+                        alert("Duplicate entry!");
+                        return;
+                    }
 
-        // Add event listeners for Enter key in input fields
-        document.getElementById('newResponsibility').addEventListener('keypress', function(e) {
-            if (e.key === 'Enter') {
-                e.preventDefault();
-                addItem('responsibilities');
-            }
-        });
+                    // Create a tag element
+                    const tag = document.createElement("span");
+                    tag.className = "tag";
+                    tag.innerHTML = `${value} <span class="remove" onclick="removeTag(this, '${listId}')">&times;</span>`;
 
-        document.getElementById('newRequirement').addEventListener('keypress', function(e) {
-            if (e.key === 'Enter') {
-                e.preventDefault();
-                addItem('requirements');
-            }
-        });
+                    // Append to the container
+                    listContainer.appendChild(tag);
 
-        document.getElementById('newBenefit').addEventListener('keypress', function(e) {
-            if (e.key === 'Enter') {
-                e.preventDefault();
-                addItem('benefits');
+                    // Clear input field
+                    inputField.value = "";
+                }
             }
+
+            // Function to remove a tag
+            window.removeTag = function (element, listId) {
+                const tagContainer = document.getElementById(listId);
+                tagContainer.removeChild(element.parentElement);
+            };
+
+            // Add event listeners for buttons
+            document.getElementById("addResponsibility").addEventListener("click", function () {
+                addTag("newResponsibility", "responsibilitiesList");
+            });
+
+            document.getElementById("addRequirement").addEventListener("click", function () {
+                addTag("newRequirement", "requirementsList");
+            });
+
+            document.getElementById("addBenefit").addEventListener("click", function () {
+                addTag("newBenefit", "benefitsList");
+            });
+
+            // Allow Enter key to add tags
+            document.getElementById("newResponsibility").addEventListener("keypress", function (event) {
+                if (event.key === "Enter") {
+                    event.preventDefault();
+                    addTag("newResponsibility", "responsibilitiesList");
+                }
+            });
+
+            document.getElementById("newRequirement").addEventListener("keypress", function (event) {
+                if (event.key === "Enter") {
+                    event.preventDefault();
+                    addTag("newRequirement", "requirementsList");
+                }
+            });
+
+            document.getElementById("newBenefit").addEventListener("keypress", function (event) {
+                if (event.key === "Enter") {
+                    event.preventDefault();
+                    addTag("newBenefit", "benefitsList");
+                }
+            });
         });
     </script>
 </body>

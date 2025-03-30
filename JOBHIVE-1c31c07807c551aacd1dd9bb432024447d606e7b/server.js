@@ -327,6 +327,110 @@ initializeDB().then(() => {
         }
     });
 
+    // Get All Jobs
+    app.get('/api/jobs', async (req, res) => {
+        try {
+            const jobs = await db.collection('jobs')
+                .find({ status: 'active' })
+                .sort({ createdAt: -1 })
+                .toArray();
+
+            res.json(jobs);
+        } catch (error) {
+            console.error('Error fetching jobs:', error);
+            res.status(500).json({ message: 'Error fetching jobs' });
+        }
+    });
+
+    // Apply for a Job
+    app.post('/api/jobs/:jobId/apply', async (req, res) => {
+        try {
+            const { userId } = req.body;
+            const jobId = req.params.jobId;
+
+            // Check if job exists
+            const job = await db.collection('jobs').findOne({ _id: jobId });
+            if (!job) {
+                return res.status(404).json({ message: 'Job not found' });
+            }
+
+            // Check if user has already applied
+            const existingApplication = await db.collection('applications').findOne({
+                jobId,
+                userId
+            });
+
+            if (existingApplication) {
+                return res.status(400).json({ message: 'You have already applied for this job' });
+            }
+
+            // Create application
+            await db.collection('applications').insertOne({
+                jobId,
+                userId,
+                status: 'pending',
+                appliedAt: new Date()
+            });
+
+            // Add application to job's applications array
+            await db.collection('jobs').updateOne(
+                { _id: jobId },
+                { $push: { applications: userId } }
+            );
+
+            res.status(201).json({ message: 'Application submitted successfully' });
+        } catch (error) {
+            console.error('Error applying for job:', error);
+            res.status(500).json({ message: 'Error applying for job' });
+        }
+    });
+
+    // Get Single Job
+    app.get('/api/jobs/:jobId', async (req, res) => {
+        try {
+            const job = await db.collection('jobs').findOne({
+                _id: req.params.jobId,
+                status: 'active'
+            });
+
+            if (!job) {
+                return res.status(404).json({ message: 'Job not found' });
+            }
+
+            res.json(job);
+        } catch (error) {
+            console.error('Error fetching job:', error);
+            res.status(500).json({ message: 'Error fetching job' });
+        }
+    });
+
+    // Get Similar Jobs
+    app.get('/api/jobs', async (req, res) => {
+        try {
+            const { type, limit = 10, exclude } = req.query;
+            const query = { status: 'active' };
+
+            if (type) {
+                query.type = type;
+            }
+
+            if (exclude) {
+                query._id = { $ne: exclude };
+            }
+
+            const jobs = await db.collection('jobs')
+                .find(query)
+                .sort({ createdAt: -1 })
+                .limit(parseInt(limit))
+                .toArray();
+
+            res.json(jobs);
+        } catch (error) {
+            console.error('Error fetching jobs:', error);
+            res.status(500).json({ message: 'Error fetching jobs' });
+        }
+    });
+
     // Start server
     app.listen(port, () => {
         console.log(`Server running on port ${port}`);
