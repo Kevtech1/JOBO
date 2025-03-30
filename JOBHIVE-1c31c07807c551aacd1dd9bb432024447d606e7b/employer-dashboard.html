@@ -371,6 +371,17 @@
                                     </select>
                                 </div>
                                 <div class="mb-3">
+                                    <label class="form-label">Job Status</label>
+                                    <select class="form-select" name="status" required>
+                                        <option value="">Select Job Status</option>
+                                        <option value="open">Open</option>
+                                        <option value="closed">Closed</option>
+                                        <option value="draft">Draft</option>
+                                        <option value="on-hold">On Hold</option>
+                                        <option value="interviewing">Interviewing</option>
+                                    </select>
+                                </div>
+                                <div class="mb-3">
                                     <label class="form-label">Salary Range (KSh)</label>
                                     <div class="row">
                                         <div class="col">
@@ -640,6 +651,7 @@
                 location: this.querySelector('input[name="location"]').value,
                 type: this.querySelector('select[name="type"]').value,
                 experienceLevel: this.querySelector('select[name="experienceLevel"]').value,
+                status: this.querySelector('select[name="status"]').value,
                 salaryMin: this.querySelector('input[name="salaryMin"]').value,
                 salaryMax: this.querySelector('input[name="salaryMax"]').value,
                 description: this.querySelector('textarea[name="description"]').value,

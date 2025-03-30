@@ -295,7 +295,13 @@
                     // Store user data in localStorage
                     localStorage.setItem('isLoggedIn', 'true');
                     localStorage.setItem('userData', JSON.stringify(data.user));
-                    window.location.href = 'index.html';
+                    
+                    // Redirect to dashboard if user is an employer, otherwise to index
+                    if (data.user.employerId) {
+                        window.location.href = 'employer-dashboard.html';
+                    } else {
+                        window.location.href = 'index.html';
+                    }
                 } else {
                     alert(data.message || 'Login failed. Please try again.');
                 }

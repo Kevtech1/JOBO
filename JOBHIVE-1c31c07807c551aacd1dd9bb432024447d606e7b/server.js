@@ -2,14 +2,22 @@ const express = require('express');
 const bcrypt = require('bcrypt');
 const connectDB = require('./config/db');
 const cors = require('cors');
+const { ObjectId } = require('mongodb');
+const path = require('path');
 
 const app = express();
 const port = process.env.PORT || 3000;
 
 // Middleware
-app.use(cors()); // Enable CORS for all routes
+app.use(cors({
+    origin: '*',
+    methods: ['GET', 'POST', 'PUT', 'DELETE'],
+    allowedHeaders: ['Content-Type']
+}));
 app.use(express.json());
-app.use(express.static('.'));
+
+// Serve static files from the current directory
+app.use(express.static(path.join(__dirname)));
 
 // Connect to MongoDB
 let db;
@@ -248,19 +256,41 @@ initializeDB().then(() => {
     // Update Job
     app.put('/api/employer/jobs/:jobId', async (req, res) => {
         try {
+            console.log('Updating job:', req.params.jobId);
+            console.log('Update data:', req.body);
+
+            // Validate ObjectId
+            if (!ObjectId.isValid(req.params.jobId)) {
+                console.log('Invalid job ID format:', req.params.jobId);
+                return res.status(400).json({ message: 'Invalid job ID format' });
+            }
+
             const result = await db.collection('jobs').updateOne(
-                { _id: req.params.jobId },
-                { $set: req.body }
+                { _id: new ObjectId(req.params.jobId) },
+                { 
+                    $set: {
+                        ...req.body,
+                        updatedAt: new Date()
+                    }
+                }
             );
 
-            if (result.modifiedCount === 0) {
+            if (result.matchedCount === 0) {
+                console.log('Job not found:', req.params.jobId);
                 return res.status(404).json({ message: 'Job not found' });
             }
 
-            res.json({ message: 'Job updated successfully' });
+            console.log('Job updated successfully:', result.modifiedCount);
+            res.json({ 
+                message: 'Job updated successfully',
+                modifiedCount: result.modifiedCount
+            });
         } catch (error) {
             console.error('Error updating job:', error);
-            res.status(500).json({ message: 'Error updating job' });
+            res.status(500).json({ 
+                message: 'Error updating job',
+                error: error.message 
+            });
         }
     });
 
@@ -327,18 +357,63 @@ initializeDB().then(() => {
         }
     });
 
-    // Get All Jobs
+    // Get All Jobs (Updated endpoint)
     app.get('/api/jobs', async (req, res) => {
         try {
+            console.log('Fetching jobs...');
+            const { type, limit = 10, exclude } = req.query;
+            const query = { status: 'active' };
+
+            if (type) {
+                query.type = type;
+            }
+
+            if (exclude) {
+                query._id = { $ne: new ObjectId(exclude) };
+            }
+
             const jobs = await db.collection('jobs')
-                .find({ status: 'active' })
+                .find(query)
                 .sort({ createdAt: -1 })
+                .limit(parseInt(limit))
                 .toArray();
 
+            console.log(`Found ${jobs.length} jobs`);
             res.json(jobs);
         } catch (error) {
             console.error('Error fetching jobs:', error);
-            res.status(500).json({ message: 'Error fetching jobs' });
+            res.status(500).json({ message: 'Error fetching jobs', error: error.message });
+        }
+    });
+
+    // Get Single Job
+    app.get('/api/jobs/:jobId', async (req, res) => {
+        try {
+            console.log('Fetching job with ID:', req.params.jobId);
+            
+            // Validate jobId format
+            if (!ObjectId.isValid(req.params.jobId)) {
+                console.log('Invalid job ID format:', req.params.jobId);
+                return res.status(400).json({ message: 'Invalid job ID format' });
+            }
+
+            const job = await db.collection('jobs').findOne({
+                _id: new ObjectId(req.params.jobId)
+            });
+
+            if (!job) {
+                console.log('Job not found with ID:', req.params.jobId);
+                return res.status(404).json({ message: 'Job not found' });
+            }
+
+            console.log('Job found successfully:', job);
+            res.json(job);
+        } catch (error) {
+            console.error('Error fetching job:', error);
+            res.status(500).json({ 
+                message: 'Error fetching job details', 
+                error: error.message 
+            });
         }
     });
 
@@ -349,15 +424,15 @@ initializeDB().then(() => {
             const jobId = req.params.jobId;
 
             // Check if job exists
-            const job = await db.collection('jobs').findOne({ _id: jobId });
+            const job = await db.collection('jobs').findOne({ _id: new ObjectId(jobId) });
             if (!job) {
                 return res.status(404).json({ message: 'Job not found' });
             }
 
             // Check if user has already applied
             const existingApplication = await db.collection('applications').findOne({
-                jobId,
-                userId
+                jobId: new ObjectId(jobId),
+                userId: new ObjectId(userId)
             });
 
             if (existingApplication) {
@@ -366,68 +441,22 @@ initializeDB().then(() => {
 
             // Create application
             await db.collection('applications').insertOne({
-                jobId,
-                userId,
+                jobId: new ObjectId(jobId),
+                userId: new ObjectId(userId),
                 status: 'pending',
                 appliedAt: new Date()
             });
 
             // Add application to job's applications array
             await db.collection('jobs').updateOne(
-                { _id: jobId },
-                { $push: { applications: userId } }
+                { _id: new ObjectId(jobId) },
+                { $push: { applications: new ObjectId(userId) } }
             );
 
             res.status(201).json({ message: 'Application submitted successfully' });
         } catch (error) {
             console.error('Error applying for job:', error);
-            res.status(500).json({ message: 'Error applying for job' });
-        }
-    });
-
-    // Get Single Job
-    app.get('/api/jobs/:jobId', async (req, res) => {
-        try {
-            const job = await db.collection('jobs').findOne({
-                _id: req.params.jobId,
-                status: 'active'
-            });
-
-            if (!job) {
-                return res.status(404).json({ message: 'Job not found' });
-            }
-
-            res.json(job);
-        } catch (error) {
-            console.error('Error fetching job:', error);
-            res.status(500).json({ message: 'Error fetching job' });
-        }
-    });
-
-    // Get Similar Jobs
-    app.get('/api/jobs', async (req, res) => {
-        try {
-            const { type, limit = 10, exclude } = req.query;
-            const query = { status: 'active' };
-
-            if (type) {
-                query.type = type;
-            }
-
-            if (exclude) {
-                query._id = { $ne: exclude };
-            }
-
-            const jobs = await db.collection('jobs')
-                .find(query)
-                .sort({ createdAt: -1 })
-                .limit(parseInt(limit))
-                .toArray();
-
-            res.json(jobs);
-        } catch (error) {
-            console.error('Error fetching jobs:', error);
-            res.status(500).json({ message: 'Error fetching jobs' });
+            res.status(500).json({ message: 'Error applying for job', error: error.message });
         }
     });
 

@@ -118,16 +118,22 @@
                         <a class="nav-link" href="index.html">Home</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="jobs.html">Jobs</a>
+                        <a class="nav-link active" href="jobs.html">Jobs</a>
                     </li>
-                    <li class="nav-item">
+                    <li class="nav-item" id="resumeBuilderNavItem">
                         <a class="nav-link" href="resume-builder.html">Resume Builder</a>
                     </li>
-                    <li class="nav-item">
+                    <li class="nav-item" id="dashboardNavItem" style="display: none;">
+                        <a class="nav-link" href="employer-dashboard.html">Dashboard</a>
+                    </li>
+                    <li class="nav-item" id="loginNavItem">
                         <a class="nav-link" href="login.html">Login</a>
                     </li>
-                    <li class="nav-item">
+                    <li class="nav-item" id="employerNavItem">
                         <a class="nav-link" href="employer-login.html">Employer</a>
+                    </li>
+                    <li class="nav-item d-none" id="logoutNavItem">
+                        <a class="nav-link" href="#" id="logoutBtn">Logout</a>
                     </li>
                 </ul>
             </div>
@@ -279,17 +285,24 @@
                 const jobId = urlParams.get('id');
 
                 if (!jobId) {
+                    console.error('No job ID provided in URL');
                     window.location.href = 'jobs.html';
                     return;
                 }
 
+                console.log('Loading job details for ID:', jobId);
                 const response = await fetch(`http://localhost:3000/api/jobs/${jobId}`);
+                
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
+                }
+                
                 const job = await response.json();
+                console.log('Received job data:', job);
 
                 if (!job) {
-                    alert('Job not found');
-                    window.location.href = 'jobs.html';
-                    return;
+                    throw new Error('No job data received');
                 }
 
                 // Update page title
@@ -313,15 +326,21 @@
 
                 // Update responsibilities
                 const responsibilitiesList = document.querySelector('.job-description ul:nth-of-type(1)');
-                responsibilitiesList.innerHTML = job.responsibilities.map(resp => `<li>${resp}</li>`).join('');
+                if (job.responsibilities && Array.isArray(job.responsibilities)) {
+                    responsibilitiesList.innerHTML = job.responsibilities.map(resp => `<li>${resp}</li>`).join('');
+                }
 
                 // Update requirements
                 const requirementsList = document.querySelector('.job-description ul:nth-of-type(2)');
-                requirementsList.innerHTML = job.requirements.map(req => `<li>${req}</li>`).join('');
+                if (job.requirements && Array.isArray(job.requirements)) {
+                    requirementsList.innerHTML = job.requirements.map(req => `<li>${req}</li>`).join('');
+                }
 
                 // Update benefits
                 const benefitsList = document.querySelector('.job-description ul:nth-of-type(3)');
-                benefitsList.innerHTML = job.benefits.map(benefit => `<li>${benefit}</li>`).join('');
+                if (job.benefits && Array.isArray(job.benefits)) {
+                    benefitsList.innerHTML = job.benefits.map(benefit => `<li>${benefit}</li>`).join('');
+                }
 
                 // Update company info
                 document.querySelector('.company-info h4').textContent = `About ${job.company}`;
@@ -334,7 +353,8 @@
                 loadSimilarJobs(job._id, job.type);
             } catch (error) {
                 console.error('Error loading job details:', error);
-                alert('Error loading job details. Please try again.');
+                alert(`Error loading job details: ${error.message}`);
+                window.location.href = 'jobs.html';
             }
         }
 
@@ -389,8 +409,53 @@
             }
         }
 
+        // Check login status and update navigation
+        function updateNavigation() {
+            const isLoggedIn = localStorage.getItem('isLoggedIn') === 'true';
+            const userData = JSON.parse(localStorage.getItem('userData') || '{}');
+            const isEmployer = userData.employerId !== undefined;
+
+            const loginNavItem = document.getElementById('loginNavItem');
+            const employerNavItem = document.getElementById('employerNavItem');
+            const logoutNavItem = document.getElementById('logoutNavItem');
+            const resumeBuilderNavItem = document.getElementById('resumeBuilderNavItem');
+            const dashboardNavItem = document.getElementById('dashboardNavItem');
+            const logoutBtn = document.getElementById('logoutBtn');
+
+            if (isLoggedIn) {
+                loginNavItem.classList.add('d-none');
+                employerNavItem.classList.add('d-none');
+                logoutNavItem.classList.remove('d-none');
+
+                if (isEmployer) {
+                    resumeBuilderNavItem.classList.add('d-none');
+                    dashboardNavItem.classList.remove('d-none');
+                } else {
+                    resumeBuilderNavItem.classList.remove('d-none');
+                    dashboardNavItem.classList.add('d-none');
+                }
+
+                // Add logout functionality
+                logoutBtn.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    localStorage.removeItem('isLoggedIn');
+                    localStorage.removeItem('userData');
+                    window.location.href = 'index.html';
+                });
+            } else {
+                loginNavItem.classList.remove('d-none');
+                employerNavItem.classList.remove('d-none');
+                logoutNavItem.classList.add('d-none');
+                resumeBuilderNavItem.classList.remove('d-none');
+                dashboardNavItem.classList.add('d-none');
+            }
+        }
+
         // Run when page loads
-        window.addEventListener('load', loadJobDetails);
+        window.addEventListener('load', () => {
+            updateNavigation();
+            loadJobDetails();
+        });
     </script>
 </body>
 </html> 
