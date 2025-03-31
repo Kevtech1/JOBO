@@ -4,9 +4,45 @@ const connectDB = require('./config/db');
 const cors = require('cors');
 const { ObjectId } = require('mongodb');
 const path = require('path');
+const multer = require('multer');
+const fs = require('fs');
 
 const app = express();
 const port = process.env.PORT || 3000;
+
+// Configure multer for file uploads
+const storage = multer.diskStorage({
+    destination: function (req, file, cb) {
+        const uploadDir = path.join(__dirname, 'uploads');
+        if (!fs.existsSync(uploadDir)) {
+            fs.mkdirSync(uploadDir);
+        }
+        cb(null, uploadDir);
+    },
+    filename: function (req, file, cb) {
+        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+        cb(null, file.fieldname + '-' + uniqueSuffix + path.extname(file.originalname));
+    }
+});
+
+const upload = multer({ 
+    storage: storage,
+    limits: {
+        fileSize: 5 * 1024 * 1024 // 5MB limit
+    },
+    fileFilter: function (req, file, cb) {
+        if (file.fieldname === 'profilePhoto') {
+            if (!file.originalname.match(/\.(jpg|jpeg|png|gif)$/)) {
+                return cb(new Error('Only image files are allowed!'), false);
+            }
+        } else if (file.fieldname === 'resume') {
+            if (!file.originalname.match(/\.(pdf|doc|docx)$/)) {
+                return cb(new Error('Only PDF and Word documents are allowed!'), false);
+            }
+        }
+        cb(null, true);
+    }
+});
 
 // Middleware
 app.use(cors({
@@ -38,7 +74,7 @@ async function initializeDB() {
 
 // Initialize database before starting server
 initializeDB().then(() => {
-    // Job Seeker Registration
+    // User Registration
     app.post('/api/register', async (req, res) => {
         try {
             console.log('Received registration request:', req.body);
@@ -50,7 +86,7 @@ initializeDB().then(() => {
             }
 
             // Check if user already exists
-            const existingUser = await db.collection('jobseekers').findOne({ email });
+            const existingUser = await db.collection('users').findOne({ email });
             if (existingUser) {
                 console.log('Email already registered:', email);
                 return res.status(400).json({ message: 'Email already registered' });
@@ -60,7 +96,7 @@ initializeDB().then(() => {
             const hashedPassword = await bcrypt.hash(password, 10);
 
             // Insert new user
-            const result = await db.collection('jobseekers').insertOne({
+            const result = await db.collection('users').insertOne({
                 firstName,
                 lastName,
                 email,
@@ -77,7 +113,7 @@ initializeDB().then(() => {
         }
     });
 
-    // Job Seeker Login
+    // User Login
     app.post('/api/login', async (req, res) => {
         try {
             console.log('Received login request:', req.body);
@@ -89,7 +125,7 @@ initializeDB().then(() => {
             }
 
             // Find user
-            const user = await db.collection('jobseekers').findOne({ email });
+            const user = await db.collection('users').findOne({ email });
             if (!user) {
                 console.log('User not found:', email);
                 return res.status(400).json({ message: 'Invalid credentials' });
@@ -102,6 +138,10 @@ initializeDB().then(() => {
                 return res.status(400).json({ message: 'Invalid credentials' });
             }
 
+            // Check if user has completed profile
+            const jobseeker = await db.collection('jobseekers').findOne({ userId: user._id });
+            const hasCompletedProfile = !!jobseeker;
+
             console.log('User logged in successfully:', email);
             res.json({ 
                 message: 'Login successful',
@@ -109,12 +149,132 @@ initializeDB().then(() => {
                     id: user._id,
                     firstName: user.firstName,
                     lastName: user.lastName,
-                    email: user.email
+                    email: user.email,
+                    hasCompletedProfile
                 }
             });
         } catch (error) {
             console.error('Login error:', error);
             res.status(500).json({ message: 'Error during login', error: error.message });
+        }
+    });
+
+    // Get User Profile
+    app.get('/api/user/profile/:userId', async (req, res) => {
+        try {
+            // Get basic user info
+            const user = await db.collection('users').findOne(
+                { _id: new ObjectId(req.params.userId) },
+                { projection: { password: 0 } }
+            );
+
+            if (!user) {
+                return res.status(404).json({ message: 'User not found' });
+            }
+
+            // Get jobseeker profile if exists
+            const jobseeker = await db.collection('jobseekers').findOne(
+                { userId: new ObjectId(req.params.userId) }
+            );
+
+            // Combine user and jobseeker data
+            const profile = {
+                ...user,
+                ...jobseeker
+            };
+
+            res.json(profile);
+        } catch (error) {
+            console.error('Error fetching user profile:', error);
+            res.status(500).json({ message: 'Error fetching profile' });
+        }
+    });
+
+    // Update User Profile
+    app.put('/api/user/profile/:userId', upload.fields([
+        { name: 'profilePhoto', maxCount: 1 },
+        { name: 'resume', maxCount: 1 }
+    ]), async (req, res) => {
+        try {
+            const {
+                firstName,
+                lastName,
+                phone,
+                location
+            } = req.body;
+
+            // Update user basic info
+            await db.collection('users').updateOne(
+                { _id: new ObjectId(req.params.userId) },
+                {
+                    $set: {
+                        firstName,
+                        lastName,
+                        phone,
+                        updatedAt: new Date()
+                    }
+                }
+            );
+
+            // Handle file uploads
+            const profilePhotoUrl = req.files['profilePhoto'] ? 
+                `/uploads/${req.files['profilePhoto'][0].filename}` : null;
+            const resumeUrl = req.files['resume'] ? 
+                `/uploads/${req.files['resume'][0].filename}` : null;
+
+            // Update or create jobseeker profile
+            const jobseekerData = {
+                userId: new ObjectId(req.params.userId),
+                location,
+                resumeUrl,
+                profilePhotoUrl,
+                profileCompleted: true,
+                updatedAt: new Date()
+            };
+
+            await db.collection('jobseekers').updateOne(
+                { userId: new ObjectId(req.params.userId) },
+                { $set: jobseekerData },
+                { upsert: true }
+            );
+
+            res.json({ 
+                message: 'Profile updated successfully',
+                profilePhotoUrl,
+                resumeUrl
+            });
+        } catch (error) {
+            console.error('Error updating profile:', error);
+            res.status(500).json({ message: 'Error updating profile', error: error.message });
+        }
+    });
+
+    // Get User's Job Applications
+    app.get('/api/user/applications/:userId', async (req, res) => {
+        try {
+            const applications = await db.collection('applications')
+                .find({ userId: new ObjectId(req.params.userId) })
+                .toArray();
+
+            // Get job details for each application
+            const applicationsWithDetails = await Promise.all(
+                applications.map(async (app) => {
+                    const job = await db.collection('jobs').findOne(
+                        { _id: app.jobId },
+                        { projection: { title: 1, company: 1 } }
+                    );
+                    return {
+                        ...app,
+                        jobTitle: job?.title || 'Unknown Job',
+                        companyName: job?.company || 'Unknown Company'
+                    };
+                })
+            );
+
+            res.json(applicationsWithDetails);
+        } catch (error) {
+            console.error('Error fetching applications:', error);
+            res.status(500).json({ message: 'Error fetching applications' });
         }
     });
 

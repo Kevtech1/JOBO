@@ -292,16 +292,24 @@
                 const data = await response.json();
                 
                 if (response.ok) {
+                    // Check if user is an employer
+                    if (data.user.employerId) {
+                        alert('Please use the Employer Login page to access your account.');
+                        return;
+                    }
+                    
                     // Store user data in localStorage
                     localStorage.setItem('isLoggedIn', 'true');
                     localStorage.setItem('userData', JSON.stringify(data.user));
+                    localStorage.setItem('userId', data.user._id);
                     
-                    // Redirect to dashboard if user is an employer, otherwise to index
-                    if (data.user.employerId) {
-                        window.location.href = 'employer-dashboard.html';
-                    } else {
-                        window.location.href = 'index.html';
+                    // If user has a jobseeker profile, store it
+                    if (data.user.jobseekerId) {
+                        localStorage.setItem('jobseekerId', data.user.jobseekerId);
                     }
+                    
+                    // Redirect to index page
+                    window.location.href = 'index.html';
                 } else {
                     alert(data.message || 'Login failed. Please try again.');
                 }

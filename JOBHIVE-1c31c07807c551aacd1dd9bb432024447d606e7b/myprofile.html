@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Profile - JobHive</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        .profile-section {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        .profile-photo {
+            width: 150px;
+            height: 150px;
+            border-radius: 50%;
+            object-fit: cover;
+            margin-bottom: 20px;
+        }
+        .application-card {
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 15px;
+        }
+        .status-badge {
+            padding: 5px 10px;
+            border-radius: 15px;
+            font-size: 0.8rem;
+        }
+        .status-pending { background-color: #fff3cd; color: #856404; }
+        .status-accepted { background-color: #d4edda; color: #155724; }
+        .status-rejected { background-color: #f8d7da; color: #721c24; }
+        .profile-photo-preview {
+            width: 150px;
+            height: 150px;
+            border-radius: 50%;
+            margin: 10px 0;
+            background-size: cover;
+            background-position: center;
+            border: 2px solid #ddd;
+        }
+        .resume-preview {
+            margin: 10px 0;
+            padding: 10px;
+            background: #f8f9fa;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <div class="container">
+            <a class="navbar-brand" href="index.html">JobHive</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="index.html">Home</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="jobs.html">Jobs</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="resume-builder.html">Resume-Builder</a>
+                    </li>
+                    <li class="nav-item" id="loginNav">
+                        <a class="nav-link" href="login.html">Login</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active" href="myprofile.html">MyProfile</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#" onclick="logout()">Logout</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="container my-5">
+        <div class="row">
+            <!-- Profile Information -->
+            <div class="col-md-4">
+                <div class="profile-section">
+                    <h3 class="mb-4">Profile Information</h3>
+                    <div class="text-center">
+                        <img id="profilePhoto" src="https://via.placeholder.com/150" alt="Profile Photo" class="profile-photo">
+                        <div class="mb-3">
+                            <label for="photoUpload" class="btn btn-outline-primary">
+                                Change Photo
+                                <input type="file" id="photoUpload" accept="image/*" style="display: none;">
+                            </label>
+                        </div>
+                    </div>
+                    <form id="profileForm" enctype="multipart/form-data">
+                        <div class="form-group">
+                            <label for="profilePhoto">Profile Photo</label>
+                            <input type="file" id="profilePhoto" name="profilePhoto" accept="image/*">
+                            <div id="profilePhotoPreview" class="profile-photo-preview"></div>
+                        </div>
+                        <div class="form-group">
+                            <label for="firstName">First Name</label>
+                            <input type="text" id="firstName" name="firstName" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="lastName">Last Name</label>
+                            <input type="text" id="lastName" name="lastName" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="email">Email</label>
+                            <input type="email" id="email" name="email" required readonly>
+                        </div>
+                        <div class="form-group">
+                            <label for="phone">Phone</label>
+                            <input type="tel" id="phone" name="phone" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="location">Location</label>
+                            <select id="location" name="location" required>
+                                <option value="">Select Location</option>
+                                <option value="Bungoma">Remote</option>
+                                <option value="Nairobi">Nairobi</option>
+                                <option value="Mombasa">Mombasa</option>
+                                <option value="Kisumu">Kisumu</option>
+                                <option value="Nakuru">Nakuru</option>
+                                <option value="Eldoret">Eldoret</option>
+                                <option value="Thika">Thika</option>
+                                <option value="Kitale">Kitale</option>
+                                <option value="Malindi">Malindi</option>
+                                <option value="Kakamega">Kakamega</option>
+                                <option value="Bungoma">Bungoma</option>
+                                <option value="Bungoma">Machakos</option>
+                                <option value="Bungoma">Kiambu</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="resume">Resume (PDF or Word)</label>
+                            <input type="file" id="resume" name="resume" accept=".pdf,.doc,.docx">
+                            <div id="resumePreview" class="resume-preview"></div>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Update Profile</button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Job Applications -->
+            <div class="col-md-8">
+                <div class="profile-section">
+                    <h3 class="mb-4">My Job Applications</h3>
+                    <div id="applicationsList">
+                        <!-- Applications will be loaded here -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="bg-dark text-light py-4 mt-5">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-6">
+                    <h5>JobHive</h5>
+                    <p>Find your dream job today</p>
+                </div>
+                <div class="col-md-6 text-md-end">
+                    <p>&copy; 2024 JobHive. All rights reserved.</p>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Check if user is logged in
+        function checkUserLogin() {
+            const userData = JSON.parse(localStorage.getItem('userData'));
+            if (!userData) {
+                window.location.href = 'login.html';
+                return;
+            }
+            return userData;
+        }
+
+        // Load user profile
+        async function loadUserProfile() {
+            try {
+                const userId = localStorage.getItem('userId');
+                if (!userId) {
+                    window.location.href = 'login.html';
+                    return;
+                }
+
+                const response = await fetch(`/api/user/profile/${userId}`);
+                const profile = await response.json();
+
+                // Populate form fields
+                document.getElementById('firstName').value = profile.firstName || '';
+                document.getElementById('lastName').value = profile.lastName || '';
+                document.getElementById('email').value = profile.email || '';
+                document.getElementById('phone').value = profile.phone || '';
+                document.getElementById('location').value = profile.location || '';
+
+                // Display profile photo if exists
+                if (profile.profilePhotoUrl) {
+                    document.getElementById('profilePhotoPreview').style.backgroundImage = 
+                        `url(${profile.profilePhotoUrl})`;
+                }
+
+                // Display resume if exists
+                if (profile.resumeUrl) {
+                    document.getElementById('resumePreview').innerHTML = 
+                        `<a href="${profile.resumeUrl}" target="_blank">View Current Resume</a>`;
+                }
+
+                // Load job applications
+                loadJobApplications();
+            } catch (error) {
+                console.error('Error loading profile:', error);
+                alert('Error loading profile data');
+            }
+        }
+
+        // Handle form submission
+        document.getElementById('profileForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const formData = new FormData();
+            formData.append('firstName', document.getElementById('firstName').value);
+            formData.append('lastName', document.getElementById('lastName').value);
+            formData.append('phone', document.getElementById('phone').value);
+            formData.append('location', document.getElementById('location').value);
+            
+            const profilePhoto = document.getElementById('profilePhoto').files[0];
+            const resume = document.getElementById('resume').files[0];
+            
+            if (profilePhoto) {
+                formData.append('profilePhoto', profilePhoto);
+            }
+            if (resume) {
+                formData.append('resume', resume);
+            }
+
+            try {
+                const userId = localStorage.getItem('userId');
+                const response = await fetch(`/api/user/profile/${userId}`, {
+                    method: 'PUT',
+                    body: formData
+                });
+                
+                const data = await response.json();
+                if (response.ok) {
+                    alert('Profile updated successfully');
+                    loadUserProfile(); // Reload profile data
+                } else {
+                    alert(data.message || 'Error updating profile');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Error updating profile');
+            }
+        });
+
+        // Preview profile photo
+        document.getElementById('profilePhoto').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    document.getElementById('profilePhotoPreview').style.backgroundImage = 
+                        `url(${e.target.result})`;
+                }
+                reader.readAsDataURL(file);
+            }
+        });
+
+        // Preview resume
+        document.getElementById('resume').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                document.getElementById('resumePreview').innerHTML = 
+                    `<p>Selected file: ${file.name}</p>`;
+            }
+        });
+
+        // Load job applications
+        async function loadJobApplications() {
+            try {
+                const userId = localStorage.getItem('userId');
+                const response = await fetch(`/api/user/applications/${userId}`);
+                const applications = await response.json();
+
+                const applicationsList = document.getElementById('applicationsList');
+                applicationsList.innerHTML = '';
+
+                applications.forEach(app => {
+                    const statusClass = {
+                        'pending': 'status-pending',
+                        'reviewed': 'status-reviewed',
+                        'shortlisted': 'status-shortlisted',
+                        'rejected': 'status-rejected',
+                        'hired': 'status-hired'
+                    }[app.status] || 'status-pending';
+
+                    const card = document.createElement('div');
+                    card.className = 'application-card';
+                    card.innerHTML = `
+                        <h3>${app.jobTitle}</h3>
+                        <p class="company">${app.companyName}</p>
+                        <p class="date">Applied: ${new Date(app.appliedAt).toLocaleDateString()}</p>
+                        <span class="status ${statusClass}">${app.status}</span>
+                    `;
+                    applicationsList.appendChild(card);
+                });
+            } catch (error) {
+                console.error('Error loading applications:', error);
+                alert('Error loading job applications');
+            }
+        }
+
+        // Logout function
+        function logout() {
+            localStorage.removeItem('userData');
+            window.location.href = 'index.html';
+        }
+
+        // Initialize page
+        document.addEventListener('DOMContentLoaded', loadUserProfile);
+    </script>
+</body>
+</html> 
