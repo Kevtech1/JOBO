@@ -293,22 +293,87 @@
 
         // Load dashboard statistics
         async function loadDashboardStats() {
-            const response = await fetch('http://localhost:3000/api/admin/stats', {
-                headers: {
-                    'Authorization': `Bearer ${localStorage.getItem('adminToken')}`
-                }
-            });
-            
-            if (response.ok) {
-                const stats = await response.json();
-                document.getElementById('totalJobseekers').textContent = stats.totalJobseekers;
-                document.getElementById('totalEmployers').textContent = stats.totalEmployers;
-                document.getElementById('activeJobs').textContent = stats.activeJobs;
-                document.getElementById('totalApplications').textContent = stats.totalApplications;
+            try {
+                // Fetch total jobseekers
+                const jobseekersResponse = await fetch('http://localhost:3000/api/admin/stats/jobseekers', {
+                    headers: {
+                        'Authorization': `Bearer ${localStorage.getItem('adminToken')}`
+                    }
+                });
+                const totalJobseekers = await jobseekersResponse.json();
+
+                // Fetch total employers
+                const employersResponse = await fetch('http://localhost:3000/api/admin/stats/employers', {
+                    headers: {
+                        'Authorization': `Bearer ${localStorage.getItem('adminToken')}`
+                    }
+                });
+                const totalEmployers = await employersResponse.json();
+
+                // Fetch active jobs
+                const jobsResponse = await fetch('http://localhost:3000/api/admin/stats/jobs', {
+                    headers: {
+                        'Authorization': `Bearer ${localStorage.getItem('adminToken')}`
+                    }
+                });
+                const activeJobs = await jobsResponse.json();
+
+                // Fetch total applications
+                const applicationsResponse = await fetch('http://localhost:3000/api/admin/stats/applications', {
+                    headers: {
+                        'Authorization': `Bearer ${localStorage.getItem('adminToken')}`
+                    }
+                });
+                const totalApplications = await applicationsResponse.json();
+
+                // Update the dashboard with real data
+                document.getElementById('totalJobseekers').textContent = totalJobseekers.count;
+                document.getElementById('totalEmployers').textContent = totalEmployers.count;
+                document.getElementById('activeJobs').textContent = activeJobs.count;
+                document.getElementById('totalApplications').textContent = totalApplications.count;
+
+                // Load recent jobs for the jobs section
+                const recentJobsResponse = await fetch('http://localhost:3000/api/admin/jobs/recent', {
+                    headers: {
+                        'Authorization': `Bearer ${localStorage.getItem('adminToken')}`
+                    }
+                });
+                const recentJobs = await recentJobsResponse.json();
                 
-                // Update charts
-                updateRegistrationsChart(stats.monthlyRegistrations);
-                updateJobsChart(stats.monthlyJobPostings);
+                // Update jobs table
+                const jobsTableBody = document.getElementById('jobsTableBody');
+                jobsTableBody.innerHTML = '';
+                recentJobs.forEach(job => {
+                    jobsTableBody.innerHTML += `
+                        <tr>
+                            <td>${job.title}</td>
+                            <td>${job.company}</td>
+                            <td>${new Date(job.postedDate).toLocaleDateString()}</td>
+                            <td>${job.applications?.length || 0}</td>
+                            <td>${job.status}</td>
+                            <td>
+                                <button class="btn btn-sm btn-primary" onclick="editJob('${job._id}')">Edit</button>
+                                <button class="btn btn-sm btn-danger" onclick="deleteJob('${job._id}')">Delete</button>
+                            </td>
+                        </tr>
+                    `;
+                });
+
+                // Load monthly statistics for charts
+                const monthlyStatsResponse = await fetch('http://localhost:3000/api/admin/stats/monthly', {
+                    headers: {
+                        'Authorization': `Bearer ${localStorage.getItem('adminToken')}`
+                    }
+                });
+                const monthlyStats = await monthlyStatsResponse.json();
+
+                // Update charts with real data
+                updateRegistrationsChart(monthlyStats.registrations);
+                updateJobsChart(monthlyStats.jobPostings);
+
+            } catch (error) {
+                console.error('Error loading dashboard stats:', error);
+                alert('Error loading dashboard data. Please try again.');
             }
         }
 
