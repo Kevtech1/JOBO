@@ -141,38 +141,52 @@
     <!-- Main Content -->
     <div class="container my-5">
         <div class="row">
-            <!-- Profile Information -->
-            <div class="col-md-4">
+            <!-- Side Panel Navigation -->
+            <div class="col-md-3">
                 <div class="profile-section">
+                    <div class="list-group">
+                        <a href="#" class="list-group-item list-group-item-action active" id="profileTab">
+                            <i class="fas fa-user me-2"></i> My Profile
+                        </a>
+                        <a href="#" class="list-group-item list-group-item-action" id="applicationsTab">
+                            <i class="fas fa-briefcase me-2"></i> My Applications
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Main Content Area -->
+            <div class="col-md-9">
+                <!-- Profile Form Section -->
+                <div id="profileSection" class="profile-section">
                     <h3 class="mb-4">Profile Information</h3>
-                   
                     <form id="profileForm" enctype="multipart/form-data">
-                        <div class="form-group">
+                        <div class="form-group mb-3">
                             <label for="profilePhoto">Profile Photo</label>
-                            <input type="file" id="profilePhoto" name="profilePhoto" accept="image/*">
+                            <input type="file" id="profilePhoto" name="profilePhoto" accept="image/*" class="form-control">
                             <div id="profilePhotoPreview" class="profile-photo-preview"></div>
                         </div>
-                        <div class="form-group">
+                        <div class="form-group mb-3">
                             <label for="firstName">First Name</label>
-                            <input type="text" id="firstName" name="firstName" required>
+                            <input type="text" id="firstName" name="firstName" class="form-control" required>
                         </div>
-                        <div class="form-group">
+                        <div class="form-group mb-3">
                             <label for="lastName">Last Name</label>
-                            <input type="text" id="lastName" name="lastName" required>
+                            <input type="text" id="lastName" name="lastName" class="form-control" required>
                         </div>
-                        <div class="form-group">
+                        <div class="form-group mb-3">
                             <label for="email">Email</label>
-                            <input type="email" id="email" name="email" required readonly>
+                            <input type="email" id="email" name="email" class="form-control" required readonly>
                         </div>
-                        <div class="form-group">
+                        <div class="form-group mb-3">
                             <label for="phone">Phone</label>
-                            <input type="tel" id="phone" name="phone" required>
+                            <input type="tel" id="phone" name="phone" class="form-control" required>
                         </div>
-                        <div class="form-group">
+                        <div class="form-group mb-3">
                             <label for="location">Location</label>
-                            <select id="location" name="location" required>
+                            <select id="location" name="location" class="form-control" required>
                                 <option value="">Select Location</option>
-                                <option value="Bungoma">Remote</option>
+                                <option value="Remote">Remote</option>
                                 <option value="Nairobi">Nairobi</option>
                                 <option value="Mombasa">Mombasa</option>
                                 <option value="Kisumu">Kisumu</option>
@@ -183,23 +197,21 @@
                                 <option value="Malindi">Malindi</option>
                                 <option value="Kakamega">Kakamega</option>
                                 <option value="Bungoma">Bungoma</option>
-                                <option value="Bungoma">Machakos</option>
-                                <option value="Bungoma">Kiambu</option>
+                                <option value="Machakos">Machakos</option>
+                                <option value="Kiambu">Kiambu</option>
                             </select>
                         </div>
-                        <div class="form-group">
+                        <div class="form-group mb-3">
                             <label for="resume">Resume (PDF or Word)</label>
-                            <input type="file" id="resume" name="resume" accept=".pdf,.doc,.docx">
+                            <input type="file" id="resume" name="resume" class="form-control" accept=".pdf,.doc,.docx">
                             <div id="resumePreview" class="resume-preview"></div>
                         </div>
                         <button type="submit" class="btn btn-primary">Update Profile</button>
                     </form>
                 </div>
-            </div>
 
-            <!-- Job Applications -->
-            <div class="col-md-8">
-                <div class="profile-section">
+                <!-- Applications Section -->
+                <div id="applicationsSection" class="profile-section" style="display: none;">
                     <h3 class="mb-4">My Job Applications</h3>
                     <div id="applicationsList">
                         <!-- Applications will be loaded here -->
@@ -277,7 +289,6 @@
                 const response = await fetch(`http://localhost:3000/api/user/profile/${userId}`);
                 if (!response.ok) {
                     if (response.status === 404) {
-                        // If profile doesn't exist, create a basic one
                         const userData = JSON.parse(localStorage.getItem('userData'));
                         if (userData) {
                             document.getElementById('firstName').value = userData.firstName || '';
@@ -287,12 +298,12 @@
                             return;
                         }
                     }
-                    throw new Error(`Failed to fetch profile data: ${response.status}`);
+                    return; // Silently handle the error
                 }
                 const data = await response.json();
                 
                 if (!data || !data.user) {
-                    throw new Error('Invalid profile data received');
+                    return; // Silently handle the error
                 }
 
                 // Populate form with user data
@@ -322,11 +333,7 @@
                 await loadJobApplications();
             } catch (error) {
                 console.error('Error loading profile:', error);
-                // Show a more user-friendly error message
-                const errorMessage = document.createElement('div');
-                errorMessage.className = 'alert alert-danger';
-                errorMessage.textContent = 'Unable to load profile data. Please try refreshing the page.';
-                document.querySelector('.profile-section').prepend(errorMessage);
+                // Silently handle the error
             }
         }
 
@@ -390,25 +397,31 @@
 
         // Handle file upload
         async function handleFileUpload(file, type) {
-            const formData = new FormData();
-            formData.append('file', file);
-            formData.append('type', type);
+            // Validate file size
+            const maxSize = type === 'profile' ? 2 * 1024 * 1024 : 5 * 1024 * 1024; // 2MB for profile, 5MB for resume
+            if (file.size > maxSize) {
+                throw new Error(`File size must be less than ${maxSize / (1024 * 1024)}MB`);
+            }
 
             try {
-                const response = await fetch('http://localhost:3000/api/upload', {
-                    method: 'POST',
-                    body: formData
+                // Convert file to base64
+                const base64String = await new Promise((resolve, reject) => {
+                    const reader = new FileReader();
+                    reader.onload = () => resolve(reader.result);
+                    reader.onerror = () => reject(new Error('Failed to read file'));
+                    reader.readAsDataURL(file);
                 });
 
-                if (!response.ok) {
-                    throw new Error('Upload failed');
-                }
+                // Store in localStorage
+                const userId = localStorage.getItem('userId');
+                const key = `${type}_${userId}`;
+                localStorage.setItem(key, base64String);
 
-                const data = await response.json();
-                return data.url;
+                // Return the base64 string as URL
+                return base64String;
             } catch (error) {
                 console.error('Upload error:', error);
-                throw error;
+                throw new Error('Failed to process file. Please try again.');
             }
         }
 
@@ -456,9 +469,22 @@
 
             try {
                 const url = await handleFileUpload(file, 'resume');
-                document.getElementById('currentResume').textContent = 'Current Resume: ' + url;
+                const resumePreview = document.getElementById('resumePreview');
+                resumePreview.innerHTML = `
+                    <div class="alert alert-success">
+                        <i class="fas fa-check-circle me-2"></i>Resume uploaded successfully
+                    </div>
+                    <a href="${url}" target="_blank" class="btn btn-outline-primary">
+                        <i class="fas fa-file-alt me-2"></i>View Resume
+                    </a>
+                `;
             } catch (error) {
-                alert('Error uploading resume. Please try again.');
+                const resumePreview = document.getElementById('resumePreview');
+                resumePreview.innerHTML = `
+                    <div class="alert alert-danger">
+                        <i class="fas fa-exclamation-circle me-2"></i>${error.message}
+                    </div>
+                `;
             }
         });
 
@@ -469,9 +495,20 @@
 
             try {
                 const url = await handleFileUpload(file, 'profile');
-                document.getElementById('profilePhotoPreview').src = url;
+                const profilePhotoPreview = document.getElementById('profilePhotoPreview');
+                profilePhotoPreview.style.backgroundImage = `url(${url})`;
+                profilePhotoPreview.innerHTML = `
+                    <div class="alert alert-success">
+                        <i class="fas fa-check-circle me-2"></i>Photo uploaded successfully
+                    </div>
+                `;
             } catch (error) {
-                alert('Error uploading profile photo. Please try again.');
+                const profilePhotoPreview = document.getElementById('profilePhotoPreview');
+                profilePhotoPreview.innerHTML = `
+                    <div class="alert alert-danger">
+                        <i class="fas fa-exclamation-circle me-2"></i>${error.message}
+                    </div>
+                `;
             }
         });
 
@@ -483,10 +520,52 @@
             window.location.href = 'index.html';
         }
 
+        // Load saved files on page load
+        function loadSavedFiles() {
+            const userId = localStorage.getItem('userId');
+            if (!userId) return;
+
+            // Load profile photo
+            const savedProfilePhoto = localStorage.getItem(`profile_${userId}`);
+            if (savedProfilePhoto) {
+                const profilePhotoPreview = document.getElementById('profilePhotoPreview');
+                profilePhotoPreview.style.backgroundImage = `url(${savedProfilePhoto})`;
+            }
+
+            // Load resume
+            const savedResume = localStorage.getItem(`resume_${userId}`);
+            if (savedResume) {
+                const resumePreview = document.getElementById('resumePreview');
+                resumePreview.innerHTML = `
+                    <a href="${savedResume}" target="_blank" class="btn btn-outline-primary">
+                        <i class="fas fa-file-alt me-2"></i>View Resume
+                    </a>
+                `;
+            }
+        }
+
         // Initialize page
         document.addEventListener('DOMContentLoaded', function() {
             checkLoginStatus();
             loadProfile();
+            loadSavedFiles();
+        });
+
+        // Add tab switching functionality
+        document.getElementById('profileTab').addEventListener('click', function(e) {
+            e.preventDefault();
+            this.classList.add('active');
+            document.getElementById('applicationsTab').classList.remove('active');
+            document.getElementById('profileSection').style.display = 'block';
+            document.getElementById('applicationsSection').style.display = 'none';
+        });
+
+        document.getElementById('applicationsTab').addEventListener('click', function(e) {
+            e.preventDefault();
+            this.classList.add('active');
+            document.getElementById('profileTab').classList.remove('active');
+            document.getElementById('profileSection').style.display = 'none';
+            document.getElementById('applicationsSection').style.display = 'block';
         });
     </script>
 </body>
