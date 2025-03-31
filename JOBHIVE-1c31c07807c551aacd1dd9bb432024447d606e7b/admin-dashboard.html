@@ -1,0 +1,495 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard - JobHive</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.7.2/font/bootstrap-icons.css" rel="stylesheet">
+    <style>
+        .sidebar {
+            min-height: 100vh;
+            background-color: #2c3e50;
+            color: white;
+            padding-top: 20px;
+        }
+        .sidebar .nav-link {
+            color: white;
+            padding: 10px 20px;
+            margin: 5px 0;
+            border-radius: 5px;
+        }
+        .sidebar .nav-link:hover {
+            background-color: #34495e;
+        }
+        .sidebar .nav-link.active {
+            background-color: #3498db;
+        }
+        .main-content {
+            padding: 20px;
+        }
+        .stat-card {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        .stat-card i {
+            font-size: 2rem;
+            margin-bottom: 10px;
+        }
+        .table-container {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            margin-top: 20px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        .chart-container {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            margin-top: 20px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+    </style>
+</head>
+<body>
+    <div class="container-fluid">
+        <div class="row">
+            <!-- Sidebar -->
+            <div class="col-md-3 col-lg-2 sidebar">
+                <h4 class="text-center mb-4">JobHive Admin</h4>
+                <nav class="nav flex-column">
+                    <a class="nav-link active" href="#" data-section="dashboard">
+                        <i class="bi bi-speedometer2"></i> Dashboard
+                    </a>
+                    <a class="nav-link" href="#" data-section="jobs">
+                        <i class="bi bi-briefcase"></i> Manage Jobs
+                    </a>
+                    <a class="nav-link" href="#" data-section="users">
+                        <i class="bi bi-people"></i> Manage Users
+                    </a>
+                    <a class="nav-link" href="#" data-section="applications">
+                        <i class="bi bi-file-text"></i> Applications
+                    </a>
+                    <a class="nav-link" href="#" data-section="reports">
+                        <i class="bi bi-graph-up"></i> Reports
+                    </a>
+                    <a class="nav-link" href="#" id="logoutBtn">
+                        <i class="bi bi-box-arrow-right"></i> Logout
+                    </a>
+                </nav>
+            </div>
+
+            <!-- Main Content -->
+            <div class="col-md-9 col-lg-10 main-content">
+                <!-- Dashboard Overview -->
+                <div id="dashboard-section" class="section">
+                    <h2 class="mb-4">Dashboard Overview</h2>
+                    <div class="row">
+                        <div class="col-md-3">
+                            <div class="stat-card text-center">
+                                <i class="bi bi-person text-primary"></i>
+                                <h3 id="totalJobseekers">0</h3>
+                                <p>Total Jobseekers</p>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="stat-card text-center">
+                                <i class="bi bi-building text-success"></i>
+                                <h3 id="totalEmployers">0</h3>
+                                <p>Total Employers</p>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="stat-card text-center">
+                                <i class="bi bi-briefcase text-warning"></i>
+                                <h3 id="activeJobs">0</h3>
+                                <p>Active Jobs</p>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="stat-card text-center">
+                                <i class="bi bi-file-text text-info"></i>
+                                <h3 id="totalApplications">0</h3>
+                                <p>Total Applications</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row mt-4">
+                        <div class="col-md-6">
+                            <div class="chart-container">
+                                <h4>Monthly Registrations</h4>
+                                <canvas id="registrationsChart"></canvas>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="chart-container">
+                                <h4>Monthly Job Postings</h4>
+                                <canvas id="jobsChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Manage Jobs Section -->
+                <div id="jobs-section" class="section" style="display: none;">
+                    <h2 class="mb-4">Manage Jobs</h2>
+                    <div class="table-container">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>Title</th>
+                                    <th>Company</th>
+                                    <th>Posted Date</th>
+                                    <th>Applications</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="jobsTableBody"></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Manage Users Section -->
+                <div id="users-section" class="section" style="display: none;">
+                    <h2 class="mb-4">Manage Users</h2>
+                    <div class="table-container">
+                        <ul class="nav nav-tabs mb-3">
+                            <li class="nav-item">
+                                <a class="nav-link active" href="#" data-user-type="jobseekers">Jobseekers</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" href="#" data-user-type="employers">Employers</a>
+                            </li>
+                        </ul>
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>Name</th>
+                                    <th>Email</th>
+                                    <th>Joined Date</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="usersTableBody"></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Applications Section -->
+                <div id="applications-section" class="section" style="display: none;">
+                    <h2 class="mb-4">Job Applications</h2>
+                    <div class="table-container">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>Applicant</th>
+                                    <th>Job Title</th>
+                                    <th>Company</th>
+                                    <th>Applied Date</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="applicationsTableBody"></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Reports Section -->
+                <div id="reports-section" class="section" style="display: none;">
+                    <h2 class="mb-4">Reports & Analytics</h2>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="chart-container">
+                                <h4>Popular Jobs</h4>
+                                <canvas id="popularJobsChart"></canvas>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="chart-container">
+                                <h4>Active Employers</h4>
+                                <canvas id="activeEmployersChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mt-4">
+                        <button class="btn btn-primary" id="downloadReportBtn">
+                            <i class="bi bi-download"></i> Download Report
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        // Check admin authentication
+        function checkAdminAuth() {
+            const adminToken = localStorage.getItem('adminToken');
+            if (!adminToken) {
+                window.location.href = 'admin-login.html';
+            }
+        }
+
+        // Navigation
+        document.querySelectorAll('.nav-link').forEach(link => {
+            link.addEventListener('click', (e) => {
+                if (e.target.id === 'logoutBtn') {
+                    logout();
+                    return;
+                }
+                
+                e.preventDefault();
+                const section = e.target.dataset.section;
+                
+                // Update active link
+                document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
+                e.target.classList.add('active');
+                
+                // Show selected section
+                document.querySelectorAll('.section').forEach(s => s.style.display = 'none');
+                document.getElementById(`${section}-section`).style.display = 'block';
+                
+                // Load section data
+                loadSectionData(section);
+            });
+        });
+
+        // Load section data
+        async function loadSectionData(section) {
+            const adminToken = localStorage.getItem('adminToken');
+            
+            try {
+                switch(section) {
+                    case 'dashboard':
+                        await loadDashboardStats();
+                        break;
+                    case 'jobs':
+                        await loadJobs();
+                        break;
+                    case 'users':
+                        await loadUsers('jobseekers');
+                        break;
+                    case 'applications':
+                        await loadApplications();
+                        break;
+                    case 'reports':
+                        await loadReports();
+                        break;
+                }
+            } catch (error) {
+                console.error('Error loading section data:', error);
+                alert('Error loading data. Please try again.');
+            }
+        }
+
+        // Load dashboard statistics
+        async function loadDashboardStats() {
+            const response = await fetch('http://localhost:3000/api/admin/stats', {
+                headers: {
+                    'Authorization': `Bearer ${localStorage.getItem('adminToken')}`
+                }
+            });
+            
+            if (response.ok) {
+                const stats = await response.json();
+                document.getElementById('totalJobseekers').textContent = stats.totalJobseekers;
+                document.getElementById('totalEmployers').textContent = stats.totalEmployers;
+                document.getElementById('activeJobs').textContent = stats.activeJobs;
+                document.getElementById('totalApplications').textContent = stats.totalApplications;
+                
+                // Update charts
+                updateRegistrationsChart(stats.monthlyRegistrations);
+                updateJobsChart(stats.monthlyJobPostings);
+            }
+        }
+
+        // Load jobs
+        async function loadJobs() {
+            const response = await fetch('http://localhost:3000/api/admin/jobs', {
+                headers: {
+                    'Authorization': `Bearer ${localStorage.getItem('adminToken')}`
+                }
+            });
+            
+            if (response.ok) {
+                const jobs = await response.json();
+                const tbody = document.getElementById('jobsTableBody');
+                tbody.innerHTML = '';
+                
+                jobs.forEach(job => {
+                    tbody.innerHTML += `
+                        <tr>
+                            <td>${job.title}</td>
+                            <td>${job.company}</td>
+                            <td>${new Date(job.postedDate).toLocaleDateString()}</td>
+                            <td>${job.applications}</td>
+                            <td>${job.status}</td>
+                            <td>
+                                <button class="btn btn-sm btn-primary" onclick="editJob('${job._id}')">Edit</button>
+                                <button class="btn btn-sm btn-danger" onclick="deleteJob('${job._id}')">Delete</button>
+                            </td>
+                        </tr>
+                    `;
+                });
+            }
+        }
+
+        // Load users
+        async function loadUsers(type) {
+            const response = await fetch(`http://localhost:3000/api/admin/users?type=${type}`, {
+                headers: {
+                    'Authorization': `Bearer ${localStorage.getItem('adminToken')}`
+                }
+            });
+            
+            if (response.ok) {
+                const users = await response.json();
+                const tbody = document.getElementById('usersTableBody');
+                tbody.innerHTML = '';
+                
+                users.forEach(user => {
+                    tbody.innerHTML += `
+                        <tr>
+                            <td>${user.name}</td>
+                            <td>${user.email}</td>
+                            <td>${new Date(user.joinedDate).toLocaleDateString()}</td>
+                            <td>${user.status}</td>
+                            <td>
+                                <button class="btn btn-sm btn-danger" onclick="deleteUser('${user._id}', '${type}')">Delete</button>
+                            </td>
+                        </tr>
+                    `;
+                });
+            }
+        }
+
+        // Load applications
+        async function loadApplications() {
+            const response = await fetch('http://localhost:3000/api/admin/applications', {
+                headers: {
+                    'Authorization': `Bearer ${localStorage.getItem('adminToken')}`
+                }
+            });
+            
+            if (response.ok) {
+                const applications = await response.json();
+                const tbody = document.getElementById('applicationsTableBody');
+                tbody.innerHTML = '';
+                
+                applications.forEach(app => {
+                    tbody.innerHTML += `
+                        <tr>
+                            <td>${app.applicantName}</td>
+                            <td>${app.jobTitle}</td>
+                            <td>${app.company}</td>
+                            <td>${new Date(app.appliedDate).toLocaleDateString()}</td>
+                            <td>${app.status}</td>
+                            <td>
+                                <button class="btn btn-sm btn-info" onclick="viewApplication('${app._id}')">View</button>
+                            </td>
+                        </tr>
+                    `;
+                });
+            }
+        }
+
+        // Load reports
+        async function loadReports() {
+            const response = await fetch('http://localhost:3000/api/admin/reports', {
+                headers: {
+                    'Authorization': `Bearer ${localStorage.getItem('adminToken')}`
+                }
+            });
+            
+            if (response.ok) {
+                const reports = await response.json();
+                updatePopularJobsChart(reports.popularJobs);
+                updateActiveEmployersChart(reports.activeEmployers);
+            }
+        }
+
+        // Chart functions
+        function updateRegistrationsChart(data) {
+            const ctx = document.getElementById('registrationsChart').getContext('2d');
+            new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: data.labels,
+                    datasets: [{
+                        label: 'Registrations',
+                        data: data.values,
+                        borderColor: '#3498db',
+                        tension: 0.1
+                    }]
+                }
+            });
+        }
+
+        function updateJobsChart(data) {
+            const ctx = document.getElementById('jobsChart').getContext('2d');
+            new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: data.labels,
+                    datasets: [{
+                        label: 'Job Postings',
+                        data: data.values,
+                        borderColor: '#2ecc71',
+                        tension: 0.1
+                    }]
+                }
+            });
+        }
+
+        function updatePopularJobsChart(data) {
+            const ctx = document.getElementById('popularJobsChart').getContext('2d');
+            new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: data.labels,
+                    datasets: [{
+                        label: 'Applications',
+                        data: data.values,
+                        backgroundColor: '#3498db'
+                    }]
+                }
+            });
+        }
+
+        function updateActiveEmployersChart(data) {
+            const ctx = document.getElementById('activeEmployersChart').getContext('2d');
+            new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: data.labels,
+                    datasets: [{
+                        label: 'Active Employers',
+                        data: data.values,
+                        backgroundColor: '#2ecc71'
+                    }]
+                }
+            });
+        }
+
+        // Logout function
+        function logout() {
+            localStorage.removeItem('adminToken');
+            localStorage.removeItem('adminId');
+            window.location.href = 'admin-login.html';
+        }
+
+        // Initialize dashboard
+        checkAdminAuth();
+        loadDashboardStats();
+    </script>
+</body>
+</html> 

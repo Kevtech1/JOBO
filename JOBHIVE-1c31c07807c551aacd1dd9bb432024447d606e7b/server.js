@@ -6,6 +6,7 @@ const { ObjectId } = require('mongodb');
 const path = require('path');
 const multer = require('multer');
 const fs = require('fs');
+const jwt = require('jsonwebtoken');
 
 const app = express();
 const port = process.env.PORT || 3000;
@@ -48,12 +49,54 @@ const upload = multer({
 app.use(cors({
     origin: '*',
     methods: ['GET', 'POST', 'PUT', 'DELETE'],
-    allowedHeaders: ['Content-Type']
+    allowedHeaders: ['Content-Type', 'Authorization'],
+    credentials: true
 }));
 app.use(express.json());
 
 // Serve static files from the current directory
 app.use(express.static(path.join(__dirname)));
+
+// Admin login route
+app.post('/api/admin/login', async (req, res) => {
+    console.log('Admin login route hit');
+    console.log('Request body:', req.body);
+    
+    try {
+        const { email, password } = req.body;
+        console.log('Attempting to find admin with email:', email);
+        
+        const admin = await db.collection('admins').findOne({ email });
+        console.log('Admin found:', admin ? 'Yes' : 'No');
+        
+        if (!admin) {
+            return res.status(401).json({ message: 'Invalid credentials' });
+        }
+
+        const isMatch = await bcrypt.compare(password, admin.password);
+        console.log('Password match:', isMatch ? 'Yes' : 'No');
+        
+        if (!isMatch) {
+            return res.status(401).json({ message: 'Invalid credentials' });
+        }
+
+        const token = jwt.sign(
+            { adminId: admin._id, role: 'admin' },
+            'your-secret-key',
+            { expiresIn: '24h' }
+        );
+
+        console.log('Login successful, sending response');
+        res.json({
+            token,
+            adminId: admin._id,
+            message: 'Login successful'
+        });
+    } catch (error) {
+        console.error('Admin login error:', error);
+        res.status(500).json({ message: 'Server error' });
+    }
+});
 
 // Connect to MongoDB
 let db;

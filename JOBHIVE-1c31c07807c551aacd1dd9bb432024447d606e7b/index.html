@@ -300,6 +300,129 @@
         document.addEventListener('DOMContentLoaded', function() {
             checkLoginStatus();
         });
+
+        // Handle form submission
+        document.getElementById('profileForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const userId = localStorage.getItem('userId');
+            if (!userId) {
+                showToast('Please log in to update your profile');
+                window.location.href = 'login.html';
+                return;
+            }
+
+            try {
+                // Create FormData object
+                const formData = new FormData();
+                
+                // Add basic profile information
+                formData.append('userId', userId);
+                formData.append('firstName', document.getElementById('firstName').value);
+                formData.append('lastName', document.getElementById('lastName').value);
+                formData.append('email', document.getElementById('email').value);
+                formData.append('phone', document.getElementById('phone').value);
+                formData.append('location', document.getElementById('location').value);
+
+                // Handle profile photo upload
+                const profilePhoto = document.getElementById('profilePhoto').files[0];
+                if (profilePhoto) {
+                    if (profilePhoto.size > 2 * 1024 * 1024) {
+                        throw new Error('Profile photo must be less than 2MB');
+                    }
+                    formData.append('profilePhoto', profilePhoto);
+                }
+
+                // Handle resume upload
+                const resume = document.getElementById('resume').files[0];
+                if (resume) {
+                    if (resume.size > 5 * 1024 * 1024) {
+                        throw new Error('Resume must be less than 5MB');
+                    }
+                    formData.append('resume', resume);
+                }
+
+                // Send the request to create/update the jobseeker profile
+                const response = await fetch('http://localhost:3000/api/jobseeker', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.message || 'Failed to update profile');
+                }
+
+                const result = await response.json();
+                
+                // Mark profile as completed in localStorage
+                localStorage.setItem('profileCompleted', 'true');
+
+                showToast('Profile updated successfully!');
+                
+                // Reload profile data
+                await loadProfile();
+            } catch (error) {
+                console.error('Error updating profile:', error);
+                showToast(error.message || 'Error updating profile. Please try again.');
+            }
+        });
+
+        async function loadProfile() {
+            const userId = localStorage.getItem('userId');
+            if (!userId) {
+                showToast('Please log in to access your profile');
+                setTimeout(() => {
+                    window.location.href = 'login.html';
+                }, 1500);
+                return;
+            }
+
+            try {
+                // Clear any existing profile data first
+                clearProfileData();
+
+                // Fetch jobseeker profile data
+                const response = await fetch(`http://localhost:3000/api/jobseeker/${userId}`);
+                if (!response.ok) {
+                    if (response.status === 404) {
+                        // If jobseeker profile doesn't exist, show setup form
+                        const userData = JSON.parse(localStorage.getItem('userData'));
+                        if (userData) {
+                            showProfileSetupForm(userData);
+                            return;
+                        }
+                    }
+                    showProfileSetupForm();
+                    return;
+                }
+
+                const data = await response.json();
+                
+                if (!data) {
+                    showProfileSetupForm();
+                    return;
+                }
+
+                // Store jobseeker data in localStorage
+                localStorage.setItem(`jobseeker_${userId}`, JSON.stringify(data));
+                
+                // Check if profile is complete
+                if (!isProfileComplete(data)) {
+                    showProfileSetupForm(data);
+                    return;
+                }
+
+                // Profile is complete, show the profile view
+                showProfileView(data);
+                
+                // Load job applications
+                await loadJobApplications();
+            } catch (error) {
+                console.error('Error loading profile:', error);
+                showProfileSetupForm();
+            }
+        }
     </script>
 </body>
 </html>
