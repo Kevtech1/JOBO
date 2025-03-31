@@ -911,7 +911,11 @@
             const getListItems = (listId) => {
                 const list = document.getElementById(listId);
                 return Array.from(list.querySelectorAll('.tag'))
-                    .map(tag => tag.textContent.trim().replace('×', '').trim())
+                    .map(tag => {
+                        // Get text content and remove the × character and any extra whitespace
+                        const text = tag.textContent.trim();
+                        return text.substring(0, text.length - 1).trim();
+                    })
                     .filter(value => value);
             };
             
@@ -930,6 +934,8 @@
                 benefits: getListItems('benefitsList'),
                 employerId: employerData.id
             };
+
+            console.log('Submitting form data:', formData);
 
             const jobId = document.getElementById('jobId').value;
             const url = jobId 

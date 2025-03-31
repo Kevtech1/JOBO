@@ -207,10 +207,14 @@ initializeDB().then(() => {
                 company,
                 location,
                 type,
+                experienceLevel,
+                status,
                 salaryMin,
                 salaryMax,
                 description,
+                responsibilities,
                 requirements,
+                benefits,
                 employerId
             } = req.body;
 
@@ -219,13 +223,16 @@ initializeDB().then(() => {
                 company,
                 location,
                 type,
+                experienceLevel,
+                status,
                 salaryMin,
                 salaryMax,
                 description,
+                responsibilities,
                 requirements,
+                benefits,
                 employerId,
                 createdAt: new Date(),
-                status: 'active',
                 applications: []
             });
 
