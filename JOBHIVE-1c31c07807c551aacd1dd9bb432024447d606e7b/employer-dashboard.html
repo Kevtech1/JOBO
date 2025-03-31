@@ -337,21 +337,22 @@
                         <div id="post-job" class="dashboard-section" style="display: none;">
                             <h2 class="mb-4">Post New Job</h2>
                             <form id="postJobForm">
+                                <input type="hidden" id="jobId" name="jobId">
                                 <div class="mb-3">
                                     <label class="form-label">Job Title</label>
-                                    <input type="text" class="form-control" name="title" required>
+                                    <input type="text" class="form-control" name="title" id="jobTitle" required>
                                 </div>
                                 <div class="mb-3">
                                     <label class="form-label">Company Name</label>
-                                    <input type="text" class="form-control" name="company" required>
+                                    <input type="text" class="form-control" name="company" id="jobCompany" required>
                                 </div>
                                 <div class="mb-3">
                                     <label class="form-label">Location</label>
-                                    <input type="text" class="form-control" name="location" required>
+                                    <input type="text" class="form-control" name="location" id="jobLocation" required>
                                 </div>
                                 <div class="mb-3">
                                     <label class="form-label">Job Type</label>
-                                    <select class="form-select" name="type" required>
+                                    <select class="form-select" name="type" id="jobType" required>
                                         <option value="">Select Job Type</option>
                                         <option value="full-time">Full Time</option>
                                         <option value="part-time">Part Time</option>
@@ -361,7 +362,7 @@
                                 </div>
                                 <div class="mb-3">
                                     <label class="form-label">Experience Level</label>
-                                    <select class="form-select" name="experienceLevel" required>
+                                    <select class="form-select" name="experienceLevel" id="jobExperienceLevel" required>
                                         <option value="">Select Experience Level</option>
                                         <option value="entry-level">Entry Level</option>
                                         <option value="mid-level">Mid Level</option>
@@ -372,7 +373,7 @@
                                 </div>
                                 <div class="mb-3">
                                     <label class="form-label">Job Status</label>
-                                    <select class="form-select" name="status" required>
+                                    <select class="form-select" name="status" id="jobStatus" required>
                                         <option value="">Select Job Status</option>
                                         <option value="open">Open</option>
                                         <option value="closed">Closed</option>
@@ -385,16 +386,16 @@
                                     <label class="form-label">Salary Range (KSh)</label>
                                     <div class="row">
                                         <div class="col">
-                                            <input type="number" class="form-control" name="salaryMin" placeholder="Minimum" required>
+                                            <input type="number" class="form-control" name="salaryMin" id="jobSalaryMin" placeholder="Minimum" required>
                                         </div>
                                         <div class="col">
-                                            <input type="number" class="form-control" name="salaryMax" placeholder="Maximum" required>
+                                            <input type="number" class="form-control" name="salaryMax" id="jobSalaryMax" placeholder="Maximum" required>
                                         </div>
                                     </div>
                                 </div>
                                 <div class="mb-3">
                                     <label class="form-label">Job Description</label>
-                                    <textarea class="form-control" name="description" rows="5" required></textarea>
+                                    <textarea class="form-control" name="description" id="jobDescription" rows="5" required></textarea>
                                 </div>
                                 <div class="mb-3">
                                     <label class="form-label">Key Responsibilities</label>
@@ -427,7 +428,7 @@
                                     </div>
                                 </div>
                                 
-                                <button type="submit" class="btn btn-primary">Post Job</button>
+                                <button type="submit" class="btn btn-primary" id="jobSubmitBtn">Post Job</button>
                             </form>
                         </div>
 
@@ -636,9 +637,9 @@
             document.getElementById('benefitsList').innerHTML = '';
             // Reset form title and button
             document.querySelector('#post-job h2').textContent = 'Post New Job';
-            form.querySelector('button[type="submit"]').textContent = 'Post Job';
+            document.getElementById('jobSubmitBtn').textContent = 'Post Job';
             // Remove job ID from form
-            delete form.dataset.jobId;
+            document.getElementById('jobId').value = '';
         }
 
         // Function to edit job
@@ -648,57 +649,72 @@
 
             try {
                 console.log('Fetching job details for:', jobId);
-                const response = await fetch(`http://localhost:3000/api/employer/jobs/${jobId}`, {
-                    method: 'GET',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    }
-                });
-
+                const response = await fetch(`http://localhost:3000/api/employer/jobs/${employerData.id}`);
+                
                 if (!response.ok) {
                     throw new Error(`HTTP error! status: ${response.status}`);
                 }
 
-                const job = await response.json();
-                console.log('Job details loaded:', job);
+                const jobs = await response.json();
+                console.log('Jobs list data:', jobs);
+                
+                // Find the specific job in the list
+                const jobData = jobs.find(job => job._id === jobId);
+                
+                if (!jobData) {
+                    console.error('Job not found:', jobId);
+                    throw new Error('Job not found in jobs list');
+                }
 
-                // Populate the post job form with job data
-                const form = document.getElementById('postJobForm');
-                form.querySelector('input[name="title"]').value = job.title || '';
-                form.querySelector('input[name="company"]').value = job.company || '';
-                form.querySelector('input[name="location"]').value = job.location || '';
-                form.querySelector('select[name="type"]').value = job.type || '';
-                form.querySelector('select[name="experienceLevel"]').value = job.experienceLevel || '';
-                form.querySelector('select[name="status"]').value = job.status || '';
-                form.querySelector('input[name="salaryMin"]').value = job.salaryMin || '';
-                form.querySelector('input[name="salaryMax"]').value = job.salaryMax || '';
-                form.querySelector('textarea[name="description"]').value = job.description || '';
+                console.log('Found job data:', jobData);
+                
+                // Populate the form with job data
+                populateFormWithJobData(jobData);
 
-                // Populate dynamic lists
-                populateDynamicList('responsibilitiesList', job.responsibilities || []);
-                populateDynamicList('requirementsList', job.requirements || []);
-                populateDynamicList('benefitsList', job.benefits || []);
-
-                // Add job ID to form for update
-                form.dataset.jobId = jobId;
-
-                // Switch to post job section
-                document.querySelectorAll('.dashboard-section').forEach(section => {
-                    section.style.display = 'none';
-                });
-                document.getElementById('post-job').style.display = 'block';
-
-                // Update form title and button for editing mode
-                document.querySelector('#post-job h2').textContent = 'Edit Job';
-                form.querySelector('button[type="submit"]').textContent = 'Update Job';
             } catch (error) {
                 console.error('Error loading job details:', error);
+                console.error('Error details:', {
+                    message: error.message,
+                    stack: error.stack
+                });
                 if (error.message.includes('Failed to fetch')) {
                     alert('Unable to connect to the server. Please make sure the server is running and try again.');
+                } else if (error.message.includes('Job not found')) {
+                    alert('The job you are trying to edit could not be found.');
                 } else {
                     alert('Error loading job details. Please try again.');
                 }
             }
+        }
+
+        // Helper function to populate form with job data
+        function populateFormWithJobData(jobData) {
+            // Populate the form with job data
+            document.getElementById('jobId').value = jobData._id;
+            document.getElementById('jobTitle').value = jobData.title || '';
+            document.getElementById('jobCompany').value = jobData.company || '';
+            document.getElementById('jobLocation').value = jobData.location || '';
+            document.getElementById('jobType').value = jobData.type || '';
+            document.getElementById('jobExperienceLevel').value = jobData.experienceLevel || '';
+            document.getElementById('jobStatus').value = jobData.status || '';
+            document.getElementById('jobSalaryMin').value = jobData.salaryMin || '';
+            document.getElementById('jobSalaryMax').value = jobData.salaryMax || '';
+            document.getElementById('jobDescription').value = jobData.description || '';
+
+            // Populate dynamic lists
+            populateDynamicList('responsibilitiesList', jobData.responsibilities || []);
+            populateDynamicList('requirementsList', jobData.requirements || []);
+            populateDynamicList('benefitsList', jobData.benefits || []);
+
+            // Switch to post job section
+            document.querySelectorAll('.dashboard-section').forEach(section => {
+                section.style.display = 'none';
+            });
+            document.getElementById('post-job').style.display = 'block';
+
+            // Update form title and button for editing mode
+            document.querySelector('#post-job h2').textContent = 'Edit Job';
+            document.getElementById('jobSubmitBtn').textContent = 'Update Job';
         }
 
         // Function to populate dynamic lists
@@ -883,6 +899,76 @@
                     addTag("newBenefit", "benefitsList");
                 }
             });
+        });
+
+        // Handle form submission
+        document.getElementById('postJobForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const employerData = checkEmployerLogin();
+            if (!employerData) return;
+            
+            // Get all items from the dynamic lists
+            const getListItems = (listId) => {
+                const list = document.getElementById(listId);
+                return Array.from(list.querySelectorAll('.tag'))
+                    .map(tag => tag.textContent.trim().replace('×', '').trim())
+                    .filter(value => value);
+            };
+            
+            const formData = {
+                title: document.getElementById('jobTitle').value,
+                company: document.getElementById('jobCompany').value,
+                location: document.getElementById('jobLocation').value,
+                type: document.getElementById('jobType').value,
+                experienceLevel: document.getElementById('jobExperienceLevel').value,
+                status: document.getElementById('jobStatus').value,
+                salaryMin: document.getElementById('jobSalaryMin').value,
+                salaryMax: document.getElementById('jobSalaryMax').value,
+                description: document.getElementById('jobDescription').value,
+                responsibilities: getListItems('responsibilitiesList'),
+                requirements: getListItems('requirementsList'),
+                benefits: getListItems('benefitsList'),
+                employerId: employerData.id
+            };
+
+            const jobId = document.getElementById('jobId').value;
+            const url = jobId 
+                ? `http://localhost:3000/api/employer/jobs/${jobId}`
+                : 'http://localhost:3000/api/employer/jobs';
+            const method = jobId ? 'PUT' : 'POST';
+
+            try {
+                const response = await fetch(url, {
+                    method: method,
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(formData)
+                });
+
+                if (response.ok) {
+                    alert(jobId ? 'Job updated successfully!' : 'Job posted successfully!');
+                    // Reset form to posting mode
+                    resetFormToPostingMode();
+                    // Switch back to manage jobs section
+                    document.querySelectorAll('.dashboard-section').forEach(section => {
+                        section.style.display = 'none';
+                    });
+                    document.getElementById('manage-jobs').style.display = 'block';
+                    // Refresh jobs list
+                    loadJobs();
+                } else {
+                    const data = await response.json();
+                    alert(data.message || (jobId ? 'Error updating job' : 'Error posting job'));
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                if (error.message.includes('Failed to fetch')) {
+                    alert('Unable to connect to the server. Please make sure the server is running and try again.');
+                } else {
+                    alert(jobId ? 'Error updating job. Please try again.' : 'Error posting job. Please try again.');
+                }
+            }
         });
     </script>
 </body>
