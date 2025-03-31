@@ -552,6 +552,36 @@
                 alert('Error applying for job. Please try again.');
             }
         }
+
+        // Add this function to check login status
+        function checkLoginStatus() {
+            const userId = localStorage.getItem('userId');
+            if (!userId) {
+                showToast('Please log in to access jobs');
+                setTimeout(() => {
+                    window.location.href = 'login.html';
+                }, 1500);
+                return false;
+            }
+            return true;
+        }
+
+        // Add this function to show toast notifications
+        function showToast(message) {
+            const toast = document.getElementById('successToast');
+            const toastMessage = document.getElementById('toastMessage');
+            toastMessage.textContent = message;
+            const bsToast = new bootstrap.Toast(toast);
+            bsToast.show();
+        }
+
+        // Check login status when page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            if (!checkLoginStatus()) {
+                return;
+            }
+            // Rest of your page initialization code
+        });
     </script>
 </body>
 </html> 

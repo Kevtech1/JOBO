@@ -275,10 +275,8 @@
         document.getElementById('loginForm').addEventListener('submit', async function(e) {
             e.preventDefault();
             
-            const formData = {
-                email: document.getElementById('email').value,
-                password: document.getElementById('password').value
-            };
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
 
             try {
                 const response = await fetch('http://localhost:3000/api/login', {
@@ -286,29 +284,27 @@
                     headers: {
                         'Content-Type': 'application/json'
                     },
-                    body: JSON.stringify(formData)
+                    body: JSON.stringify({ email, password })
                 });
 
                 const data = await response.json();
                 
                 if (response.ok) {
-                    // Check if user is an employer
-                    if (data.user.employerId) {
-                        alert('Please use the Employer Login page to access your account.');
-                        return;
-                    }
-                    
-                    // Store user data in localStorage
-                    localStorage.setItem('isLoggedIn', 'true');
-                    localStorage.setItem('userData', JSON.stringify(data.user));
+                    // Store user data and ID
+                    localStorage.setItem('userData', JSON.stringify({
+                        firstName: data.user.firstName,
+                        lastName: data.user.lastName,
+                        email: data.user.email,
+                        phone: data.user.phone
+                    }));
                     localStorage.setItem('userId', data.user._id);
                     
-                    // If user has a jobseeker profile, store it
-                    if (data.user.jobseekerId) {
-                        localStorage.setItem('jobseekerId', data.user.jobseekerId);
+                    // If user has a jobseeker profile, store that ID too
+                    if (data.jobseeker && data.jobseeker._id) {
+                        localStorage.setItem('jobseekerId', data.jobseeker._id);
                     }
-                    
-                    // Redirect to index page
+
+                    // Redirect to home page
                     window.location.href = 'index.html';
                 } else {
                     alert(data.message || 'Login failed. Please try again.');

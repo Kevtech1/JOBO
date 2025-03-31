@@ -175,10 +175,10 @@
                         <a class="nav-link" href="index.html">Home</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="#" onclick="handleNavigation('jobs.html')">Jobs</a>
+                        <a class="nav-link" href="#" onclick="checkLoginAndRedirect('jobs.html')">Jobs</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link active" href="#" onclick="handleNavigation('resume-builder.html')">Resume Builder</a>
+                        <a class="nav-link active" href="#" onclick="checkLoginAndRedirect('resume-builder.html')">Resume Builder</a>
                     </li>
                     <li class="nav-item" id="myProfileNav" style="display: none;">
                         <a class="nav-link" href="myprofile.html">My Profile</a>
@@ -698,6 +698,49 @@
             document.querySelectorAll('.preview-section-title')[3].nextElementSibling.textContent = 
                 `${skills}\n\nCertificates:\n${certificateText}`;
         }
+
+        // Add this function to check login status and redirect
+        function checkLoginAndRedirect(page) {
+            const userId = localStorage.getItem('userId');
+            if (!userId) {
+                showToast('Please log in to access this feature');
+                setTimeout(() => {
+                    window.location.href = 'login.html';
+                }, 1500);
+                return;
+            }
+            window.location.href = page;
+        }
+
+        // Add this function to show toast notifications
+        function showToast(message) {
+            const toast = document.getElementById('successToast');
+            const toastMessage = document.getElementById('toastMessage');
+            toastMessage.textContent = message;
+            const bsToast = new bootstrap.Toast(toast);
+            bsToast.show();
+        }
+
+        // Add this function to check login status
+        function checkLoginStatus() {
+            const userId = localStorage.getItem('userId');
+            if (!userId) {
+                showToast('Please log in to access the resume builder');
+                setTimeout(() => {
+                    window.location.href = 'login.html';
+                }, 1500);
+                return false;
+            }
+            return true;
+        }
+
+        // Initialize page
+        document.addEventListener('DOMContentLoaded', function() {
+            if (!checkLoginStatus()) {
+                return;
+            }
+            // Rest of your page initialization code
+        });
     </script>
 </body>
 </html> 

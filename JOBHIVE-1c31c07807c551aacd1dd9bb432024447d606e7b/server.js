@@ -74,6 +74,14 @@ async function initializeDB() {
 
 // Initialize database before starting server
 initializeDB().then(() => {
+    // Create collections if they don't exist
+    db.createCollection('users').catch(() => {});
+    db.createCollection('jobseekers').catch(() => {});
+    db.createCollection('employers').catch(() => {});
+    db.createCollection('jobs').catch(() => {});
+    db.createCollection('applications').catch(() => {});
+    db.createCollection('resumes').catch(() => {});
+
     // User Registration
     app.post('/api/register', async (req, res) => {
         try {
@@ -626,6 +634,166 @@ initializeDB().then(() => {
             res.status(500).json({ message: 'Error applying for job', error: error.message });
         }
     });
+
+    // Get jobseeker profile
+    app.get("/api/jobseeker/:userId", async (req, res) => {
+        const { userId } = req.params;
+
+        if (!userId) {
+            return res.status(400).json({ message: "User ID is required" });
+        }
+
+        const jobSeeker = await db.collection("JobSeekers").findOne({ userId });
+
+        if (!jobSeeker) {
+            return res.status(404).json({ message: "Profile not found" });
+        }
+
+        res.json(jobSeeker);
+    });
+
+    // Create/Update jobseeker profile
+    app.post("/api/jobseeker", async (req, res) => {
+        const { userId, firstName, lastName, email, phone, location, profilePhotoUrl, resumeUrl } = req.body;
+
+        if (!userId) {
+            return res.status(400).json({ message: "User ID is required" });
+        }
+
+        await db.collection("JobSeekers").updateOne(
+            { userId },
+            { 
+                $set: { 
+                    firstName, 
+                    lastName, 
+                    email, 
+                    phone, 
+                    location, 
+                    profilePhotoUrl, 
+                    resumeUrl,
+                    profileCompleted: true 
+                }
+            },
+            { upsert: true }
+        );
+
+        res.json({ message: "Profile updated successfully!" });
+    });
+
+    // Store resume
+    app.post("/api/resume", upload.single('resume'), async (req, res) => {
+        try {
+            const userId = req.body.userId;
+
+            if (!userId || !req.file) {
+                return res.status(400).json({ message: "User ID and resume file are required" });
+            }
+
+            const resumeUrl = `/uploads/${req.file.filename}`;
+
+            await db.collection("resumes").updateOne(
+                { userId: new ObjectId(userId) },
+                { 
+                    $set: { 
+                        resumeUrl, 
+                        updatedAt: new Date(),
+                        fileName: req.file.originalname,
+                        fileSize: req.file.size
+                    } 
+                },
+                { upsert: true }
+            );
+
+            res.json({ 
+                message: "Resume stored successfully!",
+                resumeUrl
+            });
+        } catch (error) {
+            console.error('Error storing resume:', error);
+            res.status(500).json({ message: "Error storing resume", error: error.message });
+        }
+    });
+
+    // Get resume
+    app.get("/api/resume/:userId", async (req, res) => {
+        try {
+            const { userId } = req.params;
+
+            if (!userId) {
+                return res.status(400).json({ message: "User ID is required" });
+            }
+
+            const resume = await db.collection("resumes").findOne({ 
+                userId: new ObjectId(userId) 
+            });
+
+            if (!resume) {
+                return res.status(404).json({ message: "Resume not found" });
+            }
+
+            res.json(resume);
+        } catch (error) {
+            console.error('Error fetching resume:', error);
+            res.status(500).json({ message: "Error fetching resume", error: error.message });
+        }
+    });
+
+    // Delete resume
+    app.delete("/api/resume/:userId", async (req, res) => {
+        try {
+            const { userId } = req.params;
+
+            if (!userId) {
+                return res.status(400).json({ message: "User ID is required" });
+            }
+
+            const result = await db.collection("resumes").deleteOne({ 
+                userId: new ObjectId(userId) 
+            });
+
+            if (result.deletedCount === 0) {
+                return res.status(404).json({ message: "Resume not found" });
+            }
+
+            res.json({ message: "Resume deleted successfully" });
+        } catch (error) {
+            console.error('Error deleting resume:', error);
+            res.status(500).json({ message: "Error deleting resume", error: error.message });
+        }
+    });
+
+    // Load resume
+    async function loadResume() {
+        const userId = localStorage.getItem('userId');
+        if (!userId) return;
+
+        try {
+            const response = await fetch(`http://localhost:3000/api/resume/${userId}`);
+            if (response.ok) {
+                const resumeData = await response.json();
+                if (resumeData.resumeUrl) {
+                    const resumePreview = document.getElementById('resumePreview');
+                    const profileResume = document.getElementById('profileResume');
+                    if (resumePreview) {
+                        resumePreview.innerHTML = `
+                            <a href="${resumeData.resumeUrl}" target="_blank" class="btn btn-outline-primary">
+                                <i class="fas fa-file-alt me-2"></i>View Resume
+                            </a>
+                        `;
+                    }
+                    if (profileResume) {
+                        profileResume.innerHTML = `
+                            <a href="${resumeData.resumeUrl}" target="_blank" class="btn btn-outline-primary">
+                                <i class="fas fa-file-alt me-2"></i>View Resume
+                            </a>
+                        `;
+                    }
+                }
+            }
+        } catch (error) {
+            console.error('Error loading resume:', error);
+        }
+    }
 
     // Start server
     app.listen(port, () => {
