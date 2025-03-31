@@ -101,6 +101,18 @@
     </style>
 </head>
 <body>
+    <!-- Add this right after the opening body tag -->
+    <div class="toast-container position-fixed top-0 end-0 p-3">
+        <div id="successToast" class="toast" role="alert" aria-live="assertive" aria-atomic="true">
+            <div class="toast-header bg-success text-white">
+                <i class="fas fa-check-circle me-2"></i>
+                <strong class="me-auto">Success</strong>
+                <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
+            </div>
+            <div class="toast-body" id="toastMessage"></div>
+        </div>
+    </div>
+
     <!-- Navigation -->
     <nav class="navbar navbar-expand-lg navbar-dark">
         <div class="container">
@@ -140,6 +152,11 @@
 
     <!-- Main Content -->
     <div class="container my-5">
+        <!-- Profile Setup Prompt -->
+        <div id="profileSetupPrompt" style="display: none;" class="alert alert-warning">
+            <strong>Complete Your Profile:</strong> Please finish setting up your profile before applying for jobs.
+        </div>
+
         <div class="row">
             <!-- Side Panel Navigation -->
             <div class="col-md-3">
@@ -157,9 +174,33 @@
 
             <!-- Main Content Area -->
             <div class="col-md-9">
+                <!-- Profile Preview Section -->
+                <div id="profilePreviewSection" class="profile-section">
+                    <h3 class="mb-4">My Profile</h3>
+                    <div class="row">
+                        <div class="col-md-4 text-center">
+                            <div id="profilePhotoPreview" class="profile-photo-preview mx-auto"></div>
+                        </div>
+                        <div class="col-md-8">
+                            <div class="profile-info">
+                                <h4 id="profileName" class="mb-3"></h4>
+                                <p><strong>Email:</strong> <span id="profileEmail"></span></p>
+                                <p><strong>Phone:</strong> <span id="profilePhone"></span></p>
+                                <p><strong>Location:</strong> <span id="profileLocation"></span></p>
+                                <div id="profileResume" class="mt-3"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="text-end mt-4">
+                        <button id="editProfileBtn" class="btn btn-primary">
+                            <i class="fas fa-edit me-2"></i>Edit Profile
+                        </button>
+                    </div>
+                </div>
+
                 <!-- Profile Form Section -->
-                <div id="profileSection" class="profile-section">
-                    <h3 class="mb-4">Profile Information</h3>
+                <div id="profileSection" class="profile-section" style="display: none;">
+                    <h3 class="mb-4">Edit Profile Information</h3>
                     <form id="profileForm" enctype="multipart/form-data">
                         <div class="form-group mb-3">
                             <label for="profilePhoto">Profile Photo</label>
@@ -176,7 +217,7 @@
                         </div>
                         <div class="form-group mb-3">
                             <label for="email">Email</label>
-                            <input type="email" id="email" name="email" class="form-control" required readonly>
+                            <input type="email" id="email" name="email" class="form-control" required>
                         </div>
                         <div class="form-group mb-3">
                             <label for="phone">Phone</label>
@@ -206,7 +247,14 @@
                             <input type="file" id="resume" name="resume" class="form-control" accept=".pdf,.doc,.docx">
                             <div id="resumePreview" class="resume-preview"></div>
                         </div>
-                        <button type="submit" class="btn btn-primary">Update Profile</button>
+                        <div class="d-flex justify-content-between">
+                            <button type="button" id="cancelEditBtn" class="btn btn-secondary">
+                                <i class="fas fa-times me-2"></i>Cancel
+                            </button>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save me-2"></i>Save Changes
+                            </button>
+                        </div>
                     </form>
                 </div>
 
@@ -258,53 +306,50 @@
     <script>
         // Check login status and update navbar
         function checkLoginStatus() {
-            const userData = JSON.parse(localStorage.getItem('userData'));
-            const myProfileNav = document.getElementById('myProfileNav');
-            const loginNav = document.getElementById('loginNav');
-            const employerNavItem = document.getElementById('employerNavItem');
-            const logoutNav = document.getElementById('logoutNav');
-
-            if (userData) {
-                myProfileNav.style.display = 'block';
-                loginNav.style.display = 'none';
-                employerNavItem.style.display = 'none';
-                logoutNav.style.display = 'block';
-            } else {
-                myProfileNav.style.display = 'none';
-                loginNav.style.display = 'block';
-                employerNavItem.style.display = 'block';
-                logoutNav.style.display = 'none';
-            }
-        }
-
-        // Load user profile data
-        async function loadProfile() {
             const userId = localStorage.getItem('userId');
             if (!userId) {
                 window.location.href = 'login.html';
                 return;
             }
+            return userId;
+        }
+
+        // Load user profile data
+        async function loadProfile() {
+            const userId = checkLoginStatus();
+            if (!userId) return;
 
             try {
                 const response = await fetch(`http://localhost:3000/api/user/profile/${userId}`);
                 if (!response.ok) {
                     if (response.status === 404) {
+                        // If profile doesn't exist, show the form with user data
                         const userData = JSON.parse(localStorage.getItem('userData'));
                         if (userData) {
+                            // Populate form with user data
                             document.getElementById('firstName').value = userData.firstName || '';
                             document.getElementById('lastName').value = userData.lastName || '';
                             document.getElementById('email').value = userData.email || '';
                             document.getElementById('phone').value = userData.phone || '';
+                            
+                            // Show the form section
+                            document.getElementById('profilePreviewSection').style.display = 'none';
+                            document.getElementById('profileSection').style.display = 'block';
+                            document.getElementById('applicationsSection').style.display = 'none';
+                            
                             return;
                         }
                     }
-                    return; // Silently handle the error
+                    throw new Error('Failed to fetch profile');
                 }
                 const data = await response.json();
                 
                 if (!data || !data.user) {
-                    return; // Silently handle the error
+                    throw new Error('Invalid profile data');
                 }
+
+                // Store user-specific data in localStorage
+                localStorage.setItem(`profile_${userId}`, JSON.stringify(data));
 
                 // Populate form with user data
                 document.getElementById('firstName').value = data.user.firstName || '';
@@ -312,20 +357,38 @@
                 document.getElementById('email').value = data.user.email || '';
                 document.getElementById('phone').value = data.user.phone || '';
                 
+                // Update preview section
+                document.getElementById('profileName').textContent = `${data.user.firstName} ${data.user.lastName}`;
+                document.getElementById('profileEmail').textContent = data.user.email;
+                document.getElementById('profilePhone').textContent = data.user.phone || 'Not provided';
+                
+                // Check if profile is incomplete
+                if (!data.user.phone || !data.jobseeker?.location || !data.jobseeker?.profilePhotoUrl) {
+                    document.getElementById('profileSetupPrompt').style.display = 'block';
+                } else {
+                    document.getElementById('profileSetupPrompt').style.display = 'none';
+                }
+                
                 // Populate jobseeker data if available
                 if (data.jobseeker) {
                     document.getElementById('location').value = data.jobseeker.location || '';
+                    document.getElementById('profileLocation').textContent = data.jobseeker.location || 'Not set';
+                    
                     if (data.jobseeker.resumeUrl) {
                         const resumePreview = document.getElementById('resumePreview');
+                        const profileResume = document.getElementById('profileResume');
                         if (resumePreview) {
                             resumePreview.innerHTML = `<a href="${data.jobseeker.resumeUrl}" target="_blank">View Current Resume</a>`;
                         }
+                        if (profileResume) {
+                            profileResume.innerHTML = `<a href="${data.jobseeker.resumeUrl}" target="_blank" class="btn btn-outline-primary">
+                                <i class="fas fa-file-alt me-2"></i>View Resume
+                            </a>`;
+                        }
                     }
                     if (data.jobseeker.profilePhotoUrl) {
-                        const profilePhoto = document.getElementById('profilePhoto');
-                        if (profilePhoto) {
-                            profilePhoto.src = data.jobseeker.profilePhotoUrl;
-                        }
+                        const profilePhotoPreview = document.getElementById('profilePhotoPreview');
+                        profilePhotoPreview.style.backgroundImage = `url(${data.jobseeker.profilePhotoUrl})`;
                     }
                 }
 
@@ -333,7 +396,7 @@
                 await loadJobApplications();
             } catch (error) {
                 console.error('Error loading profile:', error);
-                // Silently handle the error
+                showToast('Error loading profile. Please try again.');
             }
         }
 
@@ -425,6 +488,45 @@
             }
         }
 
+        // Add tab switching functionality
+        document.getElementById('profileTab').addEventListener('click', function(e) {
+            e.preventDefault();
+            this.classList.add('active');
+            document.getElementById('applicationsTab').classList.remove('active');
+            document.getElementById('profilePreviewSection').style.display = 'block';
+            document.getElementById('profileSection').style.display = 'none';
+            document.getElementById('applicationsSection').style.display = 'none';
+        });
+
+        document.getElementById('applicationsTab').addEventListener('click', function(e) {
+            e.preventDefault();
+            this.classList.add('active');
+            document.getElementById('profileTab').classList.remove('active');
+            document.getElementById('profilePreviewSection').style.display = 'none';
+            document.getElementById('profileSection').style.display = 'none';
+            document.getElementById('applicationsSection').style.display = 'block';
+        });
+
+        // Handle edit profile button click
+        document.getElementById('editProfileBtn').addEventListener('click', function() {
+            document.getElementById('profilePreviewSection').style.display = 'none';
+            document.getElementById('profileSection').style.display = 'block';
+            document.getElementById('applicationsSection').style.display = 'none';
+
+            // Enable input fields
+            document.querySelectorAll('#profileForm input, #profileForm select').forEach(input => {
+                input.removeAttribute('readonly');
+                input.removeAttribute('disabled');
+            });
+        });
+
+        // Handle cancel edit button click
+        document.getElementById('cancelEditBtn').addEventListener('click', function() {
+            document.getElementById('profilePreviewSection').style.display = 'block';
+            document.getElementById('profileSection').style.display = 'none';
+            document.getElementById('applicationsSection').style.display = 'none';
+        });
+
         // Handle form submission
         document.getElementById('profileForm').addEventListener('submit', async function(e) {
             e.preventDefault();
@@ -435,30 +537,67 @@
                 return;
             }
 
-            const formData = {
-                firstName: document.getElementById('firstName').value,
-                lastName: document.getElementById('lastName').value,
-                phone: document.getElementById('phone').value,
-                location: document.getElementById('location').value
-            };
+            const formData = new FormData();
+            formData.append('firstName', document.getElementById('firstName').value);
+            formData.append('lastName', document.getElementById('lastName').value);
+            formData.append('email', document.getElementById('email').value);
+            formData.append('phone', document.getElementById('phone').value);
+            formData.append('location', document.getElementById('location').value);
+
+            const profilePhoto = document.getElementById('profilePhoto').files[0];
+            const resume = document.getElementById('resume').files[0];
+
+            if (profilePhoto) {
+                formData.append('profilePhoto', profilePhoto);
+            }
+            if (resume) {
+                formData.append('resume', resume);
+            }
 
             try {
                 const response = await fetch(`http://localhost:3000/api/user/profile/${userId}`, {
                     method: 'PUT',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify(formData)
+                    body: formData
                 });
 
                 if (!response.ok) {
                     throw new Error('Failed to update profile');
                 }
 
-                alert('Profile updated successfully!');
+                showToast('Profile updated successfully!');
+                // Reload profile data
+                await loadProfile();
+                // Switch back to preview mode
+                document.getElementById('profilePreviewSection').style.display = 'block';
+                document.getElementById('profileSection').style.display = 'none';
+                document.getElementById('applicationsSection').style.display = 'none';
             } catch (error) {
                 console.error('Error updating profile:', error);
-                alert('Error updating profile. Please try again.');
+                showToast('Error updating profile. Please try again.');
+            }
+        });
+
+        // Add this function to show toast notifications
+        function showToast(message) {
+            const toast = document.getElementById('successToast');
+            const toastMessage = document.getElementById('toastMessage');
+            toastMessage.textContent = message;
+            const bsToast = new bootstrap.Toast(toast);
+            bsToast.show();
+        }
+
+        // Handle profile photo upload
+        document.getElementById('profilePhoto').addEventListener('change', async function(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            try {
+                const url = await handleFileUpload(file, 'profile');
+                const profilePhotoPreview = document.getElementById('profilePhotoPreview');
+                profilePhotoPreview.style.backgroundImage = `url(${url})`;
+                showToast('Photo uploaded successfully');
+            } catch (error) {
+                showToast(error.message);
             }
         });
 
@@ -471,52 +610,29 @@
                 const url = await handleFileUpload(file, 'resume');
                 const resumePreview = document.getElementById('resumePreview');
                 resumePreview.innerHTML = `
-                    <div class="alert alert-success">
-                        <i class="fas fa-check-circle me-2"></i>Resume uploaded successfully
-                    </div>
                     <a href="${url}" target="_blank" class="btn btn-outline-primary">
                         <i class="fas fa-file-alt me-2"></i>View Resume
                     </a>
                 `;
+                showToast('Resume uploaded successfully');
             } catch (error) {
-                const resumePreview = document.getElementById('resumePreview');
-                resumePreview.innerHTML = `
-                    <div class="alert alert-danger">
-                        <i class="fas fa-exclamation-circle me-2"></i>${error.message}
-                    </div>
-                `;
-            }
-        });
-
-        // Handle profile photo upload
-        document.getElementById('profilePhoto').addEventListener('change', async function(e) {
-            const file = e.target.files[0];
-            if (!file) return;
-
-            try {
-                const url = await handleFileUpload(file, 'profile');
-                const profilePhotoPreview = document.getElementById('profilePhotoPreview');
-                profilePhotoPreview.style.backgroundImage = `url(${url})`;
-                profilePhotoPreview.innerHTML = `
-                    <div class="alert alert-success">
-                        <i class="fas fa-check-circle me-2"></i>Photo uploaded successfully
-                    </div>
-                `;
-            } catch (error) {
-                const profilePhotoPreview = document.getElementById('profilePhotoPreview');
-                profilePhotoPreview.innerHTML = `
-                    <div class="alert alert-danger">
-                        <i class="fas fa-exclamation-circle me-2"></i>${error.message}
-                    </div>
-                `;
+                showToast(error.message);
             }
         });
 
         // Logout function
         function logout() {
-            localStorage.removeItem('userData');
+            const userId = localStorage.getItem('userId');
+            if (userId) {
+                // Remove only the current user's data
+                localStorage.removeItem(`profile_${userId}`);
+                localStorage.removeItem(`resume_${userId}`);
+            }
+
+            // Clear session and redirect
             localStorage.removeItem('userId');
-            localStorage.removeItem('jobseekerId');
+            localStorage.removeItem('isLoggedIn');
+            sessionStorage.clear();
             window.location.href = 'index.html';
         }
 
@@ -549,23 +665,6 @@
             checkLoginStatus();
             loadProfile();
             loadSavedFiles();
-        });
-
-        // Add tab switching functionality
-        document.getElementById('profileTab').addEventListener('click', function(e) {
-            e.preventDefault();
-            this.classList.add('active');
-            document.getElementById('applicationsTab').classList.remove('active');
-            document.getElementById('profileSection').style.display = 'block';
-            document.getElementById('applicationsSection').style.display = 'none';
-        });
-
-        document.getElementById('applicationsTab').addEventListener('click', function(e) {
-            e.preventDefault();
-            this.classList.add('active');
-            document.getElementById('profileTab').classList.remove('active');
-            document.getElementById('profileSection').style.display = 'none';
-            document.getElementById('applicationsSection').style.display = 'block';
         });
     </script>
 </body>
