@@ -128,10 +128,10 @@
                         <a class="nav-link" href="index.html">Home</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="jobs.html">Jobs</a>
+                        <a class="nav-link" href="#" onclick="checkLoginAndRedirect('jobs.html')">Jobs</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="resume-builder.html">Resume Builder</a>
+                        <a class="nav-link" href="#" onclick="checkLoginAndRedirect('resume-builder.html')">Resume Builder</a>
                     </li>
                     <li class="nav-item" id="myProfileNav" style="display: none;">
                         <a class="nav-link active" href="myprofile.html">My Profile</a>
@@ -307,97 +307,148 @@
         // Check login status and update navbar
         function checkLoginStatus() {
             const userId = localStorage.getItem('userId');
-            if (!userId) {
-                window.location.href = 'login.html';
-                return;
+            const isLoggedIn = localStorage.getItem('isLoggedIn') === 'true';
+            
+            if (!userId || !isLoggedIn) {
+                showToast('Please log in to access your profile');
+                setTimeout(() => {
+                    window.location.href = 'login.html';
+                }, 1500);
+                return false;
             }
-            return userId;
+
+            // Update navbar for logged-in state
+            document.getElementById('myProfileNav').style.display = 'block';
+            document.getElementById('loginNav').style.display = 'none';
+            document.getElementById('logoutNav').style.display = 'block';
+            
+            return true;
+        }
+
+        // Check if profile is complete
+        function isProfileComplete(profileData) {
+            return profileData && 
+                   profileData.firstName && 
+                   profileData.lastName && 
+                   profileData.email && 
+                   profileData.phone && 
+                   profileData.location && 
+                   profileData.profilePhotoUrl;
         }
 
         // Load user profile data
         async function loadProfile() {
-            const userId = checkLoginStatus();
+            const userId = localStorage.getItem('userId');
             if (!userId) return;
 
             try {
-                const response = await fetch(`http://localhost:3000/api/user/profile/${userId}`);
+                // Clear any existing profile data first
+                clearProfileData();
+
+                // Fetch jobseeker profile data
+                const response = await fetch(`http://localhost:3000/api/jobseeker/${userId}`);
                 if (!response.ok) {
                     if (response.status === 404) {
-                        // If profile doesn't exist, show the form with user data
+                        // If jobseeker profile doesn't exist, show setup form
                         const userData = JSON.parse(localStorage.getItem('userData'));
                         if (userData) {
-                            // Populate form with user data
-                            document.getElementById('firstName').value = userData.firstName || '';
-                            document.getElementById('lastName').value = userData.lastName || '';
-                            document.getElementById('email').value = userData.email || '';
-                            document.getElementById('phone').value = userData.phone || '';
-                            
-                            // Show the form section
-                            document.getElementById('profilePreviewSection').style.display = 'none';
-                            document.getElementById('profileSection').style.display = 'block';
-                            document.getElementById('applicationsSection').style.display = 'none';
-                            
+                            showProfileSetupForm(userData);
                             return;
                         }
                     }
-                    throw new Error('Failed to fetch profile');
+                    showProfileSetupForm();
+                    return;
                 }
+
                 const data = await response.json();
                 
-                if (!data || !data.user) {
-                    throw new Error('Invalid profile data');
+                if (!data) {
+                    showProfileSetupForm();
+                    return;
                 }
 
-                // Store user-specific data in localStorage
-                localStorage.setItem(`profile_${userId}`, JSON.stringify(data));
-
-                // Populate form with user data
-                document.getElementById('firstName').value = data.user.firstName || '';
-                document.getElementById('lastName').value = data.user.lastName || '';
-                document.getElementById('email').value = data.user.email || '';
-                document.getElementById('phone').value = data.user.phone || '';
+                // Store jobseeker data in localStorage
+                localStorage.setItem(`jobseeker_${userId}`, JSON.stringify(data));
                 
-                // Update preview section
-                document.getElementById('profileName').textContent = `${data.user.firstName} ${data.user.lastName}`;
-                document.getElementById('profileEmail').textContent = data.user.email;
-                document.getElementById('profilePhone').textContent = data.user.phone || 'Not provided';
-                
-                // Check if profile is incomplete
-                if (!data.user.phone || !data.jobseeker?.location || !data.jobseeker?.profilePhotoUrl) {
-                    document.getElementById('profileSetupPrompt').style.display = 'block';
-                } else {
-                    document.getElementById('profileSetupPrompt').style.display = 'none';
-                }
-                
-                // Populate jobseeker data if available
-                if (data.jobseeker) {
-                    document.getElementById('location').value = data.jobseeker.location || '';
-                    document.getElementById('profileLocation').textContent = data.jobseeker.location || 'Not set';
-                    
-                    if (data.jobseeker.resumeUrl) {
-                        const resumePreview = document.getElementById('resumePreview');
-                        const profileResume = document.getElementById('profileResume');
-                        if (resumePreview) {
-                            resumePreview.innerHTML = `<a href="${data.jobseeker.resumeUrl}" target="_blank">View Current Resume</a>`;
-                        }
-                        if (profileResume) {
-                            profileResume.innerHTML = `<a href="${data.jobseeker.resumeUrl}" target="_blank" class="btn btn-outline-primary">
-                                <i class="fas fa-file-alt me-2"></i>View Resume
-                            </a>`;
-                        }
-                    }
-                    if (data.jobseeker.profilePhotoUrl) {
-                        const profilePhotoPreview = document.getElementById('profilePhotoPreview');
-                        profilePhotoPreview.style.backgroundImage = `url(${data.jobseeker.profilePhotoUrl})`;
-                    }
+                // Check if profile is complete
+                if (!isProfileComplete(data)) {
+                    showProfileSetupForm(data);
+                    return;
                 }
 
+                // Profile is complete, show the profile view
+                showProfileView(data);
+                
                 // Load job applications
                 await loadJobApplications();
             } catch (error) {
                 console.error('Error loading profile:', error);
-                showToast('Error loading profile. Please try again.');
+                showProfileSetupForm();
             }
+        }
+
+        // Show profile setup form
+        function showProfileSetupForm(userData = null) {
+            document.getElementById('profileSetupPrompt').style.display = 'block';
+            document.getElementById('profileSetupPrompt').innerHTML = `
+                <strong>Welcome to JobHive!</strong> Please complete your profile to start applying for jobs.
+            `;
+
+            // Populate form with user data if available
+            if (userData) {
+                document.getElementById('firstName').value = userData.firstName || '';
+                document.getElementById('lastName').value = userData.lastName || '';
+                document.getElementById('email').value = userData.email || '';
+                document.getElementById('phone').value = userData.phone || '';
+            }
+
+            // Show the form section
+            document.getElementById('profilePreviewSection').style.display = 'none';
+            document.getElementById('profileSection').style.display = 'block';
+            document.getElementById('applicationsSection').style.display = 'none';
+        }
+
+        // Show profile view
+        function showProfileView(data) {
+            document.getElementById('profileSetupPrompt').style.display = 'none';
+            
+            // Populate form with user data
+            document.getElementById('firstName').value = data.firstName || '';
+            document.getElementById('lastName').value = data.lastName || '';
+            document.getElementById('email').value = data.email || '';
+            document.getElementById('phone').value = data.phone || '';
+            document.getElementById('location').value = data.location || '';
+            
+            // Update preview section
+            document.getElementById('profileName').textContent = `${data.firstName} ${data.lastName}`;
+            document.getElementById('profileEmail').textContent = data.email;
+            document.getElementById('profilePhone').textContent = data.phone || 'Not provided';
+            document.getElementById('profileLocation').textContent = data.location || 'Not set';
+            
+            // Handle profile photo
+            if (data.profilePhotoUrl) {
+                const profilePhotoPreview = document.getElementById('profilePhotoPreview');
+                profilePhotoPreview.style.backgroundImage = `url(${data.profilePhotoUrl})`;
+            }
+            
+            // Handle resume
+            if (data.resumeUrl) {
+                const resumePreview = document.getElementById('resumePreview');
+                const profileResume = document.getElementById('profileResume');
+                if (resumePreview) {
+                    resumePreview.innerHTML = `<a href="${data.resumeUrl}" target="_blank">View Current Resume</a>`;
+                }
+                if (profileResume) {
+                    profileResume.innerHTML = `<a href="${data.resumeUrl}" target="_blank" class="btn btn-outline-primary">
+                        <i class="fas fa-file-alt me-2"></i>View Resume
+                    </a>`;
+                }
+            }
+
+            // Show the preview section
+            document.getElementById('profilePreviewSection').style.display = 'block';
+            document.getElementById('profileSection').style.display = 'none';
+            document.getElementById('applicationsSection').style.display = 'none';
         }
 
         // Load job applications
@@ -533,47 +584,76 @@
             
             const userId = localStorage.getItem('userId');
             if (!userId) {
+                showToast('Please log in to update your profile');
                 window.location.href = 'login.html';
                 return;
             }
 
-            const formData = new FormData();
-            formData.append('firstName', document.getElementById('firstName').value);
-            formData.append('lastName', document.getElementById('lastName').value);
-            formData.append('email', document.getElementById('email').value);
-            formData.append('phone', document.getElementById('phone').value);
-            formData.append('location', document.getElementById('location').value);
-
-            const profilePhoto = document.getElementById('profilePhoto').files[0];
-            const resume = document.getElementById('resume').files[0];
-
-            if (profilePhoto) {
-                formData.append('profilePhoto', profilePhoto);
-            }
-            if (resume) {
-                formData.append('resume', resume);
-            }
-
             try {
-                const response = await fetch(`http://localhost:3000/api/user/profile/${userId}`, {
-                    method: 'PUT',
+                // Create FormData object
+                const formData = new FormData();
+                
+                // Add basic profile information
+                formData.append('userId', userId);
+                formData.append('firstName', document.getElementById('firstName').value);
+                formData.append('lastName', document.getElementById('lastName').value);
+                formData.append('email', document.getElementById('email').value);
+                formData.append('phone', document.getElementById('phone').value);
+                formData.append('location', document.getElementById('location').value);
+
+                // Handle profile photo upload
+                const profilePhoto = document.getElementById('profilePhoto').files[0];
+                if (profilePhoto) {
+                    if (profilePhoto.size > 2 * 1024 * 1024) {
+                        throw new Error('Profile photo must be less than 2MB');
+                    }
+                    formData.append('profilePhoto', profilePhoto);
+                }
+
+                // Handle resume upload
+                const resume = document.getElementById('resume').files[0];
+                if (resume) {
+                    if (resume.size > 5 * 1024 * 1024) {
+                        throw new Error('Resume must be less than 5MB');
+                    }
+                    formData.append('resume', resume);
+                }
+
+                // First, check if jobseeker profile exists
+                const checkResponse = await fetch(`http://localhost:3000/api/jobseeker/${userId}`);
+                
+                // Determine if this is a new profile or an update
+                const method = checkResponse.status === 404 ? 'POST' : 'PUT';
+                const endpoint = `http://localhost:3000/api/jobseeker/${method === 'POST' ? '' : userId}`;
+
+                // Send the request to create/update the jobseeker profile
+                const response = await fetch(endpoint, {
+                    method: method,
                     body: formData
                 });
 
                 if (!response.ok) {
-                    throw new Error('Failed to update profile');
+                    const errorData = await response.json();
+                    throw new Error(errorData.message || 'Failed to update profile');
                 }
 
+                const result = await response.json();
+                
+                // Store the jobseeker ID if this is a new profile
+                if (method === 'POST' && result.jobseekerId) {
+                    localStorage.setItem('jobseekerId', result.jobseekerId);
+                }
+
+                // Mark profile as completed in localStorage
+                localStorage.setItem('profileCompleted', 'true');
+
                 showToast('Profile updated successfully!');
+                
                 // Reload profile data
                 await loadProfile();
-                // Switch back to preview mode
-                document.getElementById('profilePreviewSection').style.display = 'block';
-                document.getElementById('profileSection').style.display = 'none';
-                document.getElementById('applicationsSection').style.display = 'none';
             } catch (error) {
                 console.error('Error updating profile:', error);
-                showToast('Error updating profile. Please try again.');
+                showToast(error.message || 'Error updating profile. Please try again.');
             }
         });
 
@@ -662,10 +742,30 @@
 
         // Initialize page
         document.addEventListener('DOMContentLoaded', function() {
-            checkLoginStatus();
+            // Check login status first
+            if (!checkLoginStatus()) {
+                return;
+            }
+            
+            // If logged in, load profile data
             loadProfile();
             loadSavedFiles();
         });
+
+        // Add this function to check login status and redirect
+        function checkLoginAndRedirect(page) {
+            const userId = localStorage.getItem('userId');
+            const isLoggedIn = localStorage.getItem('isLoggedIn') === 'true';
+            
+            if (!userId || !isLoggedIn) {
+                showToast('Please log in to access this feature');
+                setTimeout(() => {
+                    window.location.href = 'login.html';
+                }, 1500);
+                return;
+            }
+            window.location.href = page;
+        }
     </script>
 </body>
 </html> 
