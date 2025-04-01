@@ -29,7 +29,7 @@ function updateNavbar() {
                     <a class="nav-link ${window.location.pathname.includes('resume-builder.html') ? 'active' : ''}" href="resume-builder.html">Resume Builder</a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link ${window.location.pathname.includes('myprofile.html') ? 'active' : ''}" href="myprofile.html">My Profile</a>
+                    <a class="nav-link ${window.location.pathname.includes('resume-builder.html') ? 'active' : ''}" href="resume-builder.html">My Profile</a>
                 </li>
             `;
         } else if (userRole === 'employer') {
@@ -94,7 +94,7 @@ async function applyForJob(jobId) {
             const response = await fetch(`http://localhost:3000/api/jobseeker/${userId}`);
             if (!response.ok) {
                 showToast('Please complete your profile first');
-                window.location.href = 'myprofile.html';
+                window.location.href = 'resume-builder.html';
                 return;
             }
             window.location.href = `apply-job.html?jobId=${jobId}`;
@@ -141,7 +141,7 @@ document.addEventListener('DOMContentLoaded', function() {
         updateNavbar();
     } else {
         // If not logged in, redirect to login page if trying to access protected pages
-        const protectedPages = ['myprofile.html', 'resume-builder.html', 'employer-dashboard.html'];
+        const protectedPages = ['resume-builder.html', 'employer-dashboard.html'];
         const currentPage = window.location.pathname.split('/').pop();
         if (protectedPages.includes(currentPage)) {
             window.location.href = 'login.html';

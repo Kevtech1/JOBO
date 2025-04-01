@@ -121,7 +121,7 @@
                         <a class="nav-link" href="#" onclick="handleNavigation('resume-builder.html')">Resume Builder</a>
                     </li>
                     <li class="nav-item" id="myProfileNav" style="display: none;">
-                        <a class="nav-link" href="myprofile.html">My Profile</a>
+                        <a class="nav-link" href="resume-builder.html">Resume Builder</a>
                     </li>
                     <li class="nav-item" id="loginNav">
                         <a class="nav-link" href="login.html">Login</a>
@@ -308,7 +308,7 @@
             
             const userId = localStorage.getItem('userId');
             if (!userId) {
-                showToast('Please log in to update your profile');
+                showToast('Please log in to save your profile');
                 window.location.href = 'login.html';
                 return;
             }
@@ -317,13 +317,21 @@
                 // Create FormData object
                 const formData = new FormData();
                 
-                // Add basic profile information
+                // Add user ID to form data
                 formData.append('userId', userId);
-                formData.append('firstName', document.getElementById('firstName').value);
-                formData.append('lastName', document.getElementById('lastName').value);
-                formData.append('email', document.getElementById('email').value);
-                formData.append('phone', document.getElementById('phone').value);
-                formData.append('location', document.getElementById('location').value);
+                
+                // Add basic profile information
+                const firstName = document.getElementById('firstName').value;
+                const lastName = document.getElementById('lastName').value;
+                const email = document.getElementById('email').value;
+                const phone = document.getElementById('phone').value;
+                const location = document.getElementById('location').value;
+
+                formData.append('firstName', firstName);
+                formData.append('lastName', lastName);
+                formData.append('email', email);
+                formData.append('phone', phone);
+                formData.append('location', location);
 
                 // Handle profile photo upload
                 const profilePhoto = document.getElementById('profilePhoto').files[0];
@@ -343,9 +351,22 @@
                     formData.append('resume', resume);
                 }
 
+                // First, check if jobseeker profile exists
+                const checkResponse = await fetch(`http://localhost:3000/api/jobseeker/${userId}`);
+                
+                // Determine if this is a new profile or an update
+                const method = checkResponse.status === 404 ? 'POST' : 'PUT';
+                const endpoint = method === 'POST' 
+                    ? 'http://localhost:3000/api/jobseeker'
+                    : `http://localhost:3000/api/jobseeker/${userId}`;
+
                 // Send the request to create/update the jobseeker profile
-                const response = await fetch('http://localhost:3000/api/jobseeker', {
-                    method: 'POST',
+                const response = await fetch(endpoint, {
+                    method: method,
+                    headers: {
+                        'Accept': 'application/json'
+                        // Don't set Content-Type header when sending FormData
+                    },
                     body: formData
                 });
 
@@ -356,13 +377,34 @@
 
                 const result = await response.json();
                 
-                // Mark profile as completed in localStorage
+                // Store the jobseeker ID if this is a new profile
+                if (method === 'POST' && result.jobseekerId) {
+                    localStorage.setItem('jobseekerId', result.jobseekerId);
+                }
+
+                // Store profile data in localStorage
+                const profileData = {
+                    firstName,
+                    lastName,
+                    email,
+                    phone,
+                    location,
+                    profilePhotoUrl: result.profilePhotoUrl,
+                    resumeUrl: result.resumeUrl
+                };
+                localStorage.setItem(`jobseeker_${userId}`, JSON.stringify(profileData));
+
+                // Mark profile as completed
                 localStorage.setItem('profileCompleted', 'true');
 
                 showToast('Profile updated successfully!');
                 
-                // Reload profile data
-                await loadProfile();
+                // Update the profile view
+                showProfileView(profileData);
+                
+                // Switch to profile preview section
+                document.getElementById('profilePreviewSection').style.display = 'block';
+                document.getElementById('profileSection').style.display = 'none';
             } catch (error) {
                 console.error('Error updating profile:', error);
                 showToast(error.message || 'Error updating profile. Please try again.');
