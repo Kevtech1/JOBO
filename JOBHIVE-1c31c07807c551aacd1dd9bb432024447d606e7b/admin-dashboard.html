@@ -208,40 +208,108 @@
                     <!-- Jobs Section -->
                     <div class="section-content" id="jobs-section">
                         <h2 class="mb-4">Manage Jobs</h2>
-                        <div class="table-container">
-                            <table class="table">
-                                <thead>
-                                    <tr>
-                                        <th>Title</th>
-                                        <th>Company</th>
-                                        <th>Posted Date</th>
-                                        <th>Applications</th>
-                                        <th>Status</th>
-                                        <th>Actions</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="jobsTableBody"></tbody>
-                            </table>
+                        <div class="card mb-4">
+                            <div class="card-header d-flex justify-content-between align-items-center">
+                                <h5 class="mb-0">Job Reports</h5>
+                                <div>
+                                    <button class="btn btn-sm btn-outline-primary me-2" onclick="filterJobs()">
+                                        <i class="bi bi-funnel"></i> Filter
+                                    </button>
+                                    <button class="btn btn-sm btn-primary" onclick="exportJobsReport()">
+                                        <i class="bi bi-download"></i> Export Report
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="card-body">
+                                <div class="row mb-3">
+                                    <div class="col-md-4">
+                                        <select class="form-select" id="jobStatusFilter">
+                                            <option value="">All Statuses</option>
+                                            <option value="active">Active</option>
+                                            <option value="closed">Closed</option>
+                                            <option value="draft">Draft</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <input type="date" class="form-control" id="jobDateFilter" placeholder="Posted Date">
+                                    </div>
+                                    <div class="col-md-4">
+                                        <input type="text" class="form-control" id="jobSearchFilter" placeholder="Search jobs...">
+                                    </div>
+                                </div>
+                                <div class="table-container">
+                                    <table class="table">
+                                        <thead>
+                                            <tr>
+                                                <th>Title</th>
+                                                <th>Company</th>
+                                                <th>Posted Date</th>
+                                                <th>Applications</th>
+                                                <th>Status</th>
+                                                <th>Actions</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="jobsTableBody"></tbody>
+                                    </table>
+                                </div>
+                            </div>
                         </div>
                     </div>
 
                     <!-- Applications Section -->
                     <div class="section-content" id="applications-section">
                         <h2 class="mb-4">Job Applications</h2>
-                        <div class="table-container">
-                            <table class="table">
-                                <thead>
-                                    <tr>
-                                        <th>Applicant</th>
-                                        <th>Job Title</th>
-                                        <th>Company</th>
-                                        <th>Applied Date</th>
-                                        <th>Status</th>
-                                        <th>Actions</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="applicationsTableBody"></tbody>
-                            </table>
+                        <div class="card mb-4">
+                            <div class="card-header d-flex justify-content-between align-items-center">
+                                <h5 class="mb-0">Application Reports</h5>
+                                <div>
+                                    <button class="btn btn-sm btn-outline-primary me-2" onclick="filterApplications()">
+                                        <i class="bi bi-funnel"></i> Filter
+                                    </button>
+                                    <button class="btn btn-sm btn-primary" onclick="exportApplicationsReport()">
+                                        <i class="bi bi-download"></i> Export Report
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="card-body">
+                                <div class="row mb-3">
+                                    <div class="col-md-3">
+                                        <select class="form-select" id="applicationStatusFilter">
+                                            <option value="">All Statuses</option>
+                                            <option value="pending">Pending</option>
+                                            <option value="reviewed">Reviewed</option>
+                                            <option value="shortlisted">Shortlisted</option>
+                                            <option value="rejected">Rejected</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <input type="date" class="form-control" id="applicationDateFilter" placeholder="Applied Date">
+                                    </div>
+                                    <div class="col-md-3">
+                                        <input type="text" class="form-control" id="applicationSearchFilter" placeholder="Search applications...">
+                                    </div>
+                                    <div class="col-md-3">
+                                        <select class="form-select" id="applicationJobFilter">
+                                            <option value="">All Jobs</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="table-responsive">
+                                    <table class="table">
+                                        <thead>
+                                            <tr>
+                                                <th>Applicant</th>
+                                                <th>Job Title</th>
+                                                <th>Company</th>
+                                                <th>Applied Date</th>
+                                                <th>Status</th>
+                                                <th>Actions</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="applicationsTableBody"></tbody>
+                                    </table>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -514,62 +582,88 @@
 
         // Load jobs
         async function loadJobs() {
-            const response = await fetch('http://localhost:3000/api/admin/jobs', {
-                headers: {
-                    'Authorization': `Bearer ${localStorage.getItem('adminToken')}`
-                }
-            });
-            
-            if (response.ok) {
-                const jobs = await response.json();
-                const tbody = document.getElementById('jobsTableBody');
-                tbody.innerHTML = '';
-                
-                jobs.forEach(job => {
-                    tbody.innerHTML += `
-                        <tr>
-                            <td>${job.title}</td>
-                            <td>${job.company}</td>
-                            <td>${new Date(job.postedDate).toLocaleDateString()}</td>
-                            <td>${job.applications}</td>
-                            <td>${job.status}</td>
-                            <td>
-                                <button class="btn btn-sm btn-primary" onclick="editJob('${job._id}')">Edit</button>
-                                <button class="btn btn-sm btn-danger" onclick="deleteJob('${job._id}')">Delete</button>
-                            </td>
-                        </tr>
-                    `;
+            try {
+                const adminToken = localStorage.getItem('adminToken');
+                const status = document.getElementById('jobStatusFilter').value;
+                const date = document.getElementById('jobDateFilter').value;
+                const search = document.getElementById('jobSearchFilter').value;
+
+                const response = await fetch(`http://localhost:3000/api/admin/jobs?status=${status}&date=${date}&search=${search}`, {
+                    headers: { 'Authorization': `Bearer ${adminToken}` }
                 });
+                
+                if (response.ok) {
+                    const jobs = await response.json();
+                    const tbody = document.getElementById('jobsTableBody');
+                    tbody.innerHTML = '';
+                    
+                    jobs.forEach(job => {
+                        tbody.innerHTML += `
+                            <tr>
+                                <td>${job.title}</td>
+                                <td>${job.company}</td>
+                                <td>${new Date(job.postedDate).toLocaleDateString()}</td>
+                                <td>${job.applications}</td>
+                                <td>${job.status}</td>
+                                <td>
+                                    <button class="btn btn-sm btn-primary" onclick="editJob('${job._id}')">Edit</button>
+                                    <button class="btn btn-sm btn-danger" onclick="deleteJob('${job._id}')">Delete</button>
+                                </td>
+                            </tr>
+                        `;
+                    });
+                }
+            } catch (error) {
+                console.error('Error loading jobs:', error);
+                showAlert('error', 'Error loading jobs. Please try again.');
             }
         }
 
         // Load applications
         async function loadApplications() {
-            const response = await fetch('http://localhost:3000/api/admin/applications', {
-                headers: {
-                    'Authorization': `Bearer ${localStorage.getItem('adminToken')}`
-                }
-            });
-            
-            if (response.ok) {
-                const applications = await response.json();
-                const tbody = document.getElementById('applicationsTableBody');
-                tbody.innerHTML = '';
-                
-                applications.forEach(app => {
-                    tbody.innerHTML += `
-                        <tr>
-                            <td>${app.applicantName}</td>
-                            <td>${app.jobTitle}</td>
-                            <td>${app.company}</td>
-                            <td>${new Date(app.appliedDate).toLocaleDateString()}</td>
-                            <td>${app.status}</td>
-                            <td>
-                                <button class="btn btn-sm btn-info" onclick="viewApplication('${app._id}')">View</button>
-                            </td>
-                        </tr>
-                    `;
+            try {
+                const adminToken = localStorage.getItem('adminToken');
+                const status = document.getElementById('applicationStatusFilter').value;
+                const date = document.getElementById('applicationDateFilter').value;
+                const search = document.getElementById('applicationSearchFilter').value;
+                const job = document.getElementById('applicationJobFilter').value;
+
+                const response = await fetch(`http://localhost:3000/api/admin/applications?status=${status}&date=${date}&search=${search}&job=${job}`, {
+                    headers: { 'Authorization': `Bearer ${adminToken}` }
                 });
+                
+                if (response.ok) {
+                    const applications = await response.json();
+                    const tbody = document.getElementById('applicationsTableBody');
+                    tbody.innerHTML = '';
+                    
+                    applications.forEach(app => {
+                        tbody.innerHTML += `
+                            <tr data-job-id="${app.jobId}">
+                                <td>${app.applicantName}</td>
+                                <td>${app.jobTitle}</td>
+                                <td>${app.company}</td>
+                                <td>${new Date(app.appliedDate).toLocaleDateString()}</td>
+                                <td>${app.status}</td>
+                                <td>
+                                    <button class="btn btn-sm btn-info" onclick="viewApplication('${app._id}')">View</button>
+                                </td>
+                            </tr>
+                        `;
+                    });
+
+                    // Update job filter options
+                    const jobFilter = document.getElementById('applicationJobFilter');
+                    const uniqueJobs = [...new Set(applications.map(app => app.jobId))];
+                    jobFilter.innerHTML = '<option value="">All Jobs</option>';
+                    uniqueJobs.forEach(jobId => {
+                        const job = applications.find(app => app.jobId === jobId);
+                        jobFilter.innerHTML += `<option value="${jobId}">${job.jobTitle}</option>`;
+                    });
+                }
+            } catch (error) {
+                console.error('Error loading applications:', error);
+                showAlert('error', 'Error loading applications. Please try again.');
             }
         }
 
@@ -687,6 +781,127 @@
                 console.error('Error updating jobs chart:', error);
             }
         }
+
+        // Filter jobs
+        function filterJobs() {
+            const status = document.getElementById('jobStatusFilter').value;
+            const date = document.getElementById('jobDateFilter').value;
+            const search = document.getElementById('jobSearchFilter').value.toLowerCase();
+
+            const rows = document.querySelectorAll('#jobsTableBody tr');
+            rows.forEach(row => {
+                const jobStatus = row.querySelector('td:nth-child(5)').textContent.trim();
+                const jobDate = row.querySelector('td:nth-child(3)').textContent;
+                const jobTitle = row.querySelector('td:nth-child(1)').textContent.toLowerCase();
+                const company = row.querySelector('td:nth-child(2)').textContent.toLowerCase();
+
+                const statusMatch = !status || jobStatus === status;
+                const dateMatch = !date || jobDate === new Date(date).toLocaleDateString();
+                const searchMatch = !search || jobTitle.includes(search) || company.includes(search);
+
+                row.style.display = statusMatch && dateMatch && searchMatch ? '' : 'none';
+            });
+        }
+
+        // Export jobs report
+        async function exportJobsReport() {
+            try {
+                const adminToken = localStorage.getItem('adminToken');
+                const status = document.getElementById('jobStatusFilter').value;
+                const date = document.getElementById('jobDateFilter').value;
+                const search = document.getElementById('jobSearchFilter').value;
+
+                const response = await fetch(`http://localhost:3000/api/admin/reports/jobs?status=${status}&date=${date}&search=${search}`, {
+                    headers: { 'Authorization': `Bearer ${adminToken}` }
+                });
+
+                if (response.ok) {
+                    const blob = await response.blob();
+                    const url = window.URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = `jobs-report-${new Date().toISOString().split('T')[0]}.csv`;
+                    document.body.appendChild(a);
+                    a.click();
+                    window.URL.revokeObjectURL(url);
+                    document.body.removeChild(a);
+                } else {
+                    throw new Error('Failed to generate report');
+                }
+            } catch (error) {
+                console.error('Error exporting jobs report:', error);
+                showAlert('error', 'Error generating report. Please try again.');
+            }
+        }
+
+        // Filter applications
+        function filterApplications() {
+            const status = document.getElementById('applicationStatusFilter').value;
+            const date = document.getElementById('applicationDateFilter').value;
+            const search = document.getElementById('applicationSearchFilter').value.toLowerCase();
+            const job = document.getElementById('applicationJobFilter').value;
+
+            const rows = document.querySelectorAll('#applicationsTableBody tr');
+            rows.forEach(row => {
+                const applicationStatus = row.querySelector('td:nth-child(5)').textContent.trim();
+                const applicationDate = row.querySelector('td:nth-child(4)').textContent;
+                const applicantName = row.querySelector('td:nth-child(1)').textContent.toLowerCase();
+                const jobId = row.getAttribute('data-job-id');
+
+                const statusMatch = !status || applicationStatus === status;
+                const dateMatch = !date || applicationDate === new Date(date).toLocaleDateString();
+                const searchMatch = !search || applicantName.includes(search);
+                const jobMatch = !job || jobId === job;
+
+                row.style.display = statusMatch && dateMatch && searchMatch && jobMatch ? '' : 'none';
+            });
+        }
+
+        // Export applications report
+        async function exportApplicationsReport() {
+            try {
+                const adminToken = localStorage.getItem('adminToken');
+                const status = document.getElementById('applicationStatusFilter').value;
+                const date = document.getElementById('applicationDateFilter').value;
+                const search = document.getElementById('applicationSearchFilter').value;
+                const job = document.getElementById('applicationJobFilter').value;
+
+                const response = await fetch(`http://localhost:3000/api/admin/reports/applications?status=${status}&date=${date}&search=${search}&job=${job}`, {
+                    headers: { 'Authorization': `Bearer ${adminToken}` }
+                });
+
+                if (response.ok) {
+                    const blob = await response.blob();
+                    const url = window.URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = `applications-report-${new Date().toISOString().split('T')[0]}.csv`;
+                    document.body.appendChild(a);
+                    a.click();
+                    window.URL.revokeObjectURL(url);
+                    document.body.removeChild(a);
+                } else {
+                    throw new Error('Failed to generate report');
+                }
+            } catch (error) {
+                console.error('Error exporting applications report:', error);
+                showAlert('error', 'Error generating report. Please try again.');
+            }
+        }
+
+        // Add event listeners for filters
+        document.addEventListener('DOMContentLoaded', function() {
+            // Job filters
+            document.getElementById('jobStatusFilter').addEventListener('change', filterJobs);
+            document.getElementById('jobDateFilter').addEventListener('change', filterJobs);
+            document.getElementById('jobSearchFilter').addEventListener('input', filterJobs);
+
+            // Application filters
+            document.getElementById('applicationStatusFilter').addEventListener('change', filterApplications);
+            document.getElementById('applicationDateFilter').addEventListener('change', filterApplications);
+            document.getElementById('applicationSearchFilter').addEventListener('input', filterApplications);
+            document.getElementById('applicationJobFilter').addEventListener('change', filterApplications);
+        });
 
         // Logout function
         function logout() {
