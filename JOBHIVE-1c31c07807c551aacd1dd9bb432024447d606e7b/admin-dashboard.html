@@ -6,6 +6,7 @@
     <title>Admin Dashboard - JobHive</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.7.2/font/bootstrap-icons.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         .sidebar {
             min-height: 100vh;
@@ -408,7 +409,6 @@
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script>
         // Check admin authentication
         function checkAdminAuth() {
@@ -473,86 +473,86 @@
         // Load dashboard statistics
         async function loadDashboardStats() {
             try {
-                // Fetch total jobseekers
-                const jobseekersResponse = await fetch('http://localhost:3000/api/admin/stats/jobseekers', {
-                    headers: {
-                        'Authorization': `Bearer ${localStorage.getItem('adminToken')}`
+                const adminToken = localStorage.getItem('adminToken');
+                if (!adminToken) {
+                    console.error('No admin token found');
+                    return;
+                }
+
+                // Fetch all statistics in parallel
+                const [jobseekersRes, employersRes, jobsRes, applicationsRes, monthlyStatsRes] = await Promise.all([
+                    fetch('http://localhost:3000/api/admin/stats/jobseekers', {
+                        headers: { 'Authorization': `Bearer ${adminToken}` }
+                    }),
+                    fetch('http://localhost:3000/api/admin/stats/employers', {
+                        headers: { 'Authorization': `Bearer ${adminToken}` }
+                    }),
+                    fetch('http://localhost:3000/api/admin/stats/jobs', {
+                        headers: { 'Authorization': `Bearer ${adminToken}` }
+                    }),
+                    fetch('http://localhost:3000/api/admin/stats/applications', {
+                        headers: { 'Authorization': `Bearer ${adminToken}` }
+                    }),
+                    fetch('http://localhost:3000/api/admin/stats/monthly', {
+                        headers: { 'Authorization': `Bearer ${adminToken}` }
+                    })
+                ]);
+
+                // Check if any request failed
+                if (!jobseekersRes.ok || !employersRes.ok || !jobsRes.ok || !applicationsRes.ok || !monthlyStatsRes.ok) {
+                    throw new Error('One or more API requests failed');
+                }
+
+                // Parse responses
+                const [jobseekersData, employersData, jobsData, applicationsData, monthlyStats] = await Promise.all([
+                    jobseekersRes.json(),
+                    employersRes.json(),
+                    jobsRes.json(),
+                    applicationsRes.json(),
+                    monthlyStatsRes.json()
+                ]);
+
+                // Update dashboard statistics
+                document.getElementById('totalJobseekers').textContent = jobseekersData.count || 'N/A';
+                document.getElementById('totalEmployers').textContent = employersData.count || 'N/A';
+                document.getElementById('activeJobs').textContent = jobsData.count || 'N/A';
+                document.getElementById('totalApplications').textContent = applicationsData.count || 'N/A';
+
+                // Update charts if data exists
+                if (monthlyStats && monthlyStats.registrations) {
+                    updateRegistrationsChart(monthlyStats.registrations);
+                }
+                if (monthlyStats && monthlyStats.jobPostings) {
+                    updateJobsChart(monthlyStats.jobPostings);
+                }
+
+                // Load recent jobs
+                const recentJobsRes = await fetch('http://localhost:3000/api/admin/jobs/recent', {
+                    headers: { 'Authorization': `Bearer ${adminToken}` }
+                });
+
+                if (recentJobsRes.ok) {
+                    const recentJobs = await recentJobsRes.json();
+                    const recentJobsList = document.getElementById('recentJobsList');
+                    if (recentJobsList) {
+                        recentJobsList.innerHTML = recentJobs.map(job => `
+                            <div class="list-group-item">
+                                <div class="d-flex w-100 justify-content-between">
+                                    <h6 class="mb-1">${job.title}</h6>
+                                    <small>${new Date(job.createdAt).toLocaleDateString()}</small>
+                                </div>
+                                <p class="mb-1">${job.company}</p>
+                            </div>
+                        `).join('');
                     }
-                });
-                const totalJobseekers = await jobseekersResponse.json();
-
-                // Fetch total employers
-                const employersResponse = await fetch('http://localhost:3000/api/admin/stats/employers', {
-                    headers: {
-                        'Authorization': `Bearer ${localStorage.getItem('adminToken')}`
-                    }
-                });
-                const totalEmployers = await employersResponse.json();
-
-                // Fetch active jobs
-                const jobsResponse = await fetch('http://localhost:3000/api/admin/stats/jobs', {
-                    headers: {
-                        'Authorization': `Bearer ${localStorage.getItem('adminToken')}`
-                    }
-                });
-                const activeJobs = await jobsResponse.json();
-
-                // Fetch total applications
-                const applicationsResponse = await fetch('http://localhost:3000/api/admin/stats/applications', {
-                    headers: {
-                        'Authorization': `Bearer ${localStorage.getItem('adminToken')}`
-                    }
-                });
-                const totalApplications = await applicationsResponse.json();
-
-                // Update the dashboard with real data
-                document.getElementById('totalJobseekers').textContent = totalJobseekers.count;
-                document.getElementById('totalEmployers').textContent = totalEmployers.count;
-                document.getElementById('activeJobs').textContent = activeJobs.count;
-                document.getElementById('totalApplications').textContent = totalApplications.count;
-
-                // Load recent jobs for the jobs section
-                const recentJobsResponse = await fetch('http://localhost:3000/api/admin/jobs/recent', {
-                    headers: {
-                        'Authorization': `Bearer ${localStorage.getItem('adminToken')}`
-                    }
-                });
-                const recentJobs = await recentJobsResponse.json();
-                
-                // Update jobs table
-                const jobsTableBody = document.getElementById('jobsTableBody');
-                jobsTableBody.innerHTML = '';
-                recentJobs.forEach(job => {
-                    jobsTableBody.innerHTML += `
-                        <tr>
-                            <td>${job.title}</td>
-                            <td>${job.company}</td>
-                            <td>${new Date(job.postedDate).toLocaleDateString()}</td>
-                            <td>${job.applications?.length || 0}</td>
-                            <td>${job.status}</td>
-                            <td>
-                                <button class="btn btn-sm btn-primary" onclick="editJob('${job._id}')">Edit</button>
-                                <button class="btn btn-sm btn-danger" onclick="deleteJob('${job._id}')">Delete</button>
-                            </td>
-                        </tr>
-                    `;
-                });
-
-                // Load monthly statistics for charts
-                const monthlyStatsResponse = await fetch('http://localhost:3000/api/admin/stats/monthly', {
-                    headers: {
-                        'Authorization': `Bearer ${localStorage.getItem('adminToken')}`
-                    }
-                });
-                const monthlyStats = await monthlyStatsResponse.json();
-
-                // Update charts with real data
-                updateRegistrationsChart(monthlyStats.registrations);
-                updateJobsChart(monthlyStats.jobPostings);
-
+                }
             } catch (error) {
                 console.error('Error loading dashboard stats:', error);
-                alert('Error loading dashboard data. Please try again.');
+                // Show error message to user
+                const errorMessage = document.createElement('div');
+                errorMessage.className = 'alert alert-danger';
+                errorMessage.textContent = 'Error loading dashboard data. Please try again.';
+                document.querySelector('.container-fluid').prepend(errorMessage);
             }
         }
 
@@ -1003,54 +1003,58 @@
                 return;
             }
 
-            // Destroy existing chart if it exists
-            if (window.registrationsChart) {
-                window.registrationsChart.destroy();
-            }
+            try {
+                // Destroy existing chart if it exists and is a Chart instance
+                if (window.registrationsChart instanceof Chart) {
+                    window.registrationsChart.destroy();
+                }
 
-            // Prepare data
-            const months = data.map(item => {
-                const date = new Date(item.month);
-                return date.toLocaleString('default', { month: 'short', year: 'numeric' });
-            });
-            const jobseekers = data.map(item => item.jobseekers || 0);
-            const employers = data.map(item => item.employers || 0);
+                // Prepare data
+                const months = data.map(item => {
+                    const date = new Date(item.month);
+                    return date.toLocaleString('default', { month: 'short', year: 'numeric' });
+                });
+                const jobseekers = data.map(item => item.jobseekers || 0);
+                const employers = data.map(item => item.employers || 0);
 
-            // Create new chart
-            window.registrationsChart = new Chart(ctx.getContext('2d'), {
-                type: 'bar',
-                data: {
-                    labels: months,
-                    datasets: [
-                        {
-                            label: 'Jobseekers',
-                            data: jobseekers,
-                            backgroundColor: 'rgba(54, 162, 235, 0.5)',
-                            borderColor: 'rgba(54, 162, 235, 1)',
-                            borderWidth: 1
-                        },
-                        {
-                            label: 'Employers',
-                            data: employers,
-                            backgroundColor: 'rgba(75, 192, 192, 0.5)',
-                            borderColor: 'rgba(75, 192, 192, 1)',
-                            borderWidth: 1
-                        }
-                    ]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    scales: {
-                        y: {
-                            beginAtZero: true,
-                            ticks: {
-                                stepSize: 1
+                // Create new chart
+                window.registrationsChart = new Chart(ctx.getContext('2d'), {
+                    type: 'bar',
+                    data: {
+                        labels: months,
+                        datasets: [
+                            {
+                                label: 'Jobseekers',
+                                data: jobseekers,
+                                backgroundColor: 'rgba(54, 162, 235, 0.5)',
+                                borderColor: 'rgba(54, 162, 235, 1)',
+                                borderWidth: 1
+                            },
+                            {
+                                label: 'Employers',
+                                data: employers,
+                                backgroundColor: 'rgba(75, 192, 192, 0.5)',
+                                borderColor: 'rgba(75, 192, 192, 1)',
+                                borderWidth: 1
+                            }
+                        ]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                ticks: {
+                                    stepSize: 1
+                                }
                             }
                         }
                     }
-                }
-            });
+                });
+            } catch (error) {
+                console.error('Error updating registrations chart:', error);
+            }
         }
 
         function updateJobsChart(data) {
@@ -1060,46 +1064,50 @@
                 return;
             }
 
-            // Destroy existing chart if it exists
-            if (window.jobsChart) {
-                window.jobsChart.destroy();
-            }
+            try {
+                // Destroy existing chart if it exists and is a Chart instance
+                if (window.jobsChart instanceof Chart) {
+                    window.jobsChart.destroy();
+                }
 
-            // Prepare data
-            const months = data.map(item => {
-                const date = new Date(item.month);
-                return date.toLocaleString('default', { month: 'short', year: 'numeric' });
-            });
-            const jobCounts = data.map(item => item.count || 0);
+                // Prepare data
+                const months = data.map(item => {
+                    const date = new Date(item.month);
+                    return date.toLocaleString('default', { month: 'short', year: 'numeric' });
+                });
+                const jobCounts = data.map(item => item.count || 0);
 
-            // Create new chart
-            window.jobsChart = new Chart(ctx.getContext('2d'), {
-                type: 'bar',
-                data: {
-                    labels: months,
-                    datasets: [
-                        {
-                            label: 'Job Postings',
-                            data: jobCounts,
-                            backgroundColor: 'rgba(255, 206, 86, 0.5)',
-                            borderColor: 'rgba(255, 206, 86, 1)',
-                            borderWidth: 1
-                        }
-                    ]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    scales: {
-                        y: {
-                            beginAtZero: true,
-                            ticks: {
-                                stepSize: 1
+                // Create new chart
+                window.jobsChart = new Chart(ctx.getContext('2d'), {
+                    type: 'bar',
+                    data: {
+                        labels: months,
+                        datasets: [
+                            {
+                                label: 'Job Postings',
+                                data: jobCounts,
+                                backgroundColor: 'rgba(255, 206, 86, 0.5)',
+                                borderColor: 'rgba(255, 206, 86, 1)',
+                                borderWidth: 1
+                            }
+                        ]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                ticks: {
+                                    stepSize: 1
+                                }
                             }
                         }
                     }
-                }
-            });
+                });
+            } catch (error) {
+                console.error('Error updating jobs chart:', error);
+            }
         }
 
         // Initialize dashboard
