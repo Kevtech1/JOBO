@@ -8,6 +8,29 @@ const multer = require('multer');
 const fs = require('fs');
 const jwt = require('jsonwebtoken');
 
+// Admin Authentication Middleware
+const authenticateAdmin = async (req, res, next) => {
+    try {
+        const token = req.headers.authorization?.split(' ')[1];
+        
+        if (!token) {
+            return res.status(401).json({ message: 'No token provided' });
+        }
+
+        const decoded = jwt.verify(token, 'your-secret-key');
+        
+        if (decoded.role !== 'admin') {
+            return res.status(403).json({ message: 'Access denied. Admin only.' });
+        }
+
+        req.adminId = decoded.adminId;
+        next();
+    } catch (error) {
+        console.error('Admin authentication error:', error);
+        res.status(401).json({ message: 'Invalid token' });
+    }
+};
+
 const app = express();
 const port = process.env.PORT || 3000;
 
@@ -95,6 +118,497 @@ app.post('/api/admin/login', async (req, res) => {
     } catch (error) {
         console.error('Admin login error:', error);
         res.status(500).json({ message: 'Server error' });
+    }
+});
+
+// Admin Statistics Routes
+app.get('/api/admin/stats/jobseekers', async (req, res) => {
+    try {
+        const count = await db.collection('jobseekers').countDocuments();
+        res.json({ count });
+    } catch (error) {
+        console.error('Error fetching jobseekers count:', error);
+        res.status(500).json({ message: 'Error fetching jobseekers count' });
+    }
+});
+
+app.get('/api/admin/stats/employers', async (req, res) => {
+    try {
+        const count = await db.collection('employers').countDocuments();
+        res.json({ count });
+    } catch (error) {
+        console.error('Error fetching employers count:', error);
+        res.status(500).json({ message: 'Error fetching employers count' });
+    }
+});
+
+app.get('/api/admin/stats/jobs', async (req, res) => {
+    try {
+        const count = await db.collection('jobs').countDocuments({ status: 'active' });
+        res.json({ count });
+    } catch (error) {
+        console.error('Error fetching active jobs count:', error);
+        res.status(500).json({ message: 'Error fetching active jobs count' });
+    }
+});
+
+app.get('/api/admin/stats/applications', async (req, res) => {
+    try {
+        const count = await db.collection('applications').countDocuments();
+        res.json({ count });
+    } catch (error) {
+        console.error('Error fetching applications count:', error);
+        res.status(500).json({ message: 'Error fetching applications count' });
+    }
+});
+
+app.get('/api/admin/jobs/recent', async (req, res) => {
+    try {
+        const jobs = await db.collection('jobs')
+            .find({})
+            .sort({ createdAt: -1 })
+            .limit(10)
+            .toArray();
+        res.json(jobs);
+    } catch (error) {
+        console.error('Error fetching recent jobs:', error);
+        res.status(500).json({ message: 'Error fetching recent jobs' });
+    }
+});
+
+// Admin Jobs Routes
+app.get('/api/admin/jobs', authenticateAdmin, async (req, res) => {
+    try {
+        const jobs = await db.collection('jobs').find({}).toArray();
+        res.json(jobs);
+    } catch (error) {
+        console.error('Error fetching jobs:', error);
+        res.status(500).json({ message: 'Error fetching jobs' });
+    }
+});
+
+// Admin Monthly Statistics
+app.get('/api/admin/stats/monthly', authenticateAdmin, async (req, res) => {
+    try {
+        const currentDate = new Date();
+        const last6Months = new Date(currentDate.setMonth(currentDate.getMonth() - 6));
+        
+        // Get monthly registrations
+        const registrations = await db.collection('jobseekers').aggregate([
+            {
+                $match: {
+                    createdAt: { $gte: last6Months }
+                }
+            },
+            {
+                $group: {
+                    _id: {
+                        year: { $year: "$createdAt" },
+                        month: { $month: "$createdAt" }
+                    },
+                    jobseekers: { $sum: 1 }
+                }
+            },
+            {
+                $project: {
+                    _id: 0,
+                    month: {
+                        $dateFromParts: {
+                            year: "$_id.year",
+                            month: "$_id.month",
+                            day: 1
+                        }
+                    },
+                    jobseekers: 1
+                }
+            },
+            { $sort: { month: 1 } }
+        ]).toArray();
+
+        const employerRegistrations = await db.collection('employers').aggregate([
+            {
+                $match: {
+                    createdAt: { $gte: last6Months }
+                }
+            },
+            {
+                $group: {
+                    _id: {
+                        year: { $year: "$createdAt" },
+                        month: { $month: "$createdAt" }
+                    },
+                    employers: { $sum: 1 }
+                }
+            },
+            {
+                $project: {
+                    _id: 0,
+                    month: {
+                        $dateFromParts: {
+                            year: "$_id.year",
+                            month: "$_id.month",
+                            day: 1
+                        }
+                    },
+                    employers: 1
+                }
+            },
+            { $sort: { month: 1 } }
+        ]).toArray();
+
+        // Merge jobseeker and employer registrations
+        const mergedRegistrations = registrations.map(reg => {
+            const employerReg = employerRegistrations.find(er => 
+                er.month.getTime() === reg.month.getTime()
+            );
+            return {
+                ...reg,
+                employers: employerReg ? employerReg.employers : 0
+            };
+        });
+
+        // Get monthly job postings
+        const jobPostings = await db.collection('jobs').aggregate([
+            {
+                $match: {
+                    createdAt: { $gte: last6Months }
+                }
+            },
+            {
+                $group: {
+                    _id: {
+                        year: { $year: "$createdAt" },
+                        month: { $month: "$createdAt" }
+                    },
+                    count: { $sum: 1 }
+                }
+            },
+            {
+                $project: {
+                    _id: 0,
+                    month: {
+                        $dateFromParts: {
+                            year: "$_id.year",
+                            month: "$_id.month",
+                            day: 1
+                        }
+                    },
+                    count: 1
+                }
+            },
+            { $sort: { month: 1 } }
+        ]).toArray();
+
+        res.json({
+            registrations: mergedRegistrations,
+            jobPostings: jobPostings
+        });
+    } catch (error) {
+        console.error('Error fetching monthly stats:', error);
+        res.status(500).json({ message: 'Error fetching monthly statistics' });
+    }
+});
+
+// Admin User Management Routes
+app.get('/api/admin/users/jobseekers', async (req, res) => {
+    try {
+        const jobseekers = await db.collection('jobseekers').find({}).toArray();
+        console.log('Found jobseekers:', jobseekers.length);
+        res.json(jobseekers);
+    } catch (error) {
+        console.error('Error fetching jobseekers:', error);
+        res.status(500).json({ message: 'Error fetching jobseekers' });
+    }
+});
+
+app.get('/api/admin/users/employers', async (req, res) => {
+    try {
+        const employers = await db.collection('employers').find({}).toArray();
+        console.log('Found employers:', employers.length);
+        res.json(employers);
+    } catch (error) {
+        console.error('Error fetching employers:', error);
+        res.status(500).json({ message: 'Error fetching employers' });
+    }
+});
+
+// Admin Reports Routes
+app.get('/api/admin/reports/jobseekers', async (req, res) => {
+    try {
+        const jobseekers = await db.collection('jobseekers')
+            .aggregate([
+                {
+                    $lookup: {
+                        from: 'applications',
+                        localField: '_id',
+                        foreignField: 'jobseeker',
+                        as: 'applications'
+                    }
+                },
+                {
+                    $lookup: {
+                        from: 'resumes',
+                        localField: '_id',
+                        foreignField: 'jobseeker',
+                        as: 'resume'
+                    }
+                },
+                {
+                    $project: {
+                        firstName: 1,
+                        lastName: 1,
+                        email: 1,
+                        location: 1,
+                        status: 1,
+                        createdAt: 1,
+                        applications: { $size: '$applications' },
+                        resumeUrl: { $arrayElemAt: ['$resume.url', 0] }
+                    }
+                },
+                {
+                    $sort: { createdAt: -1 }
+                }
+            ]).toArray();
+
+        res.json(jobseekers);
+    } catch (error) {
+        console.error('Error fetching jobseekers report:', error);
+        res.status(500).json({ message: 'Error fetching jobseekers report' });
+    }
+});
+
+app.get('/api/admin/reports/employers', async (req, res) => {
+    try {
+        const employers = await db.collection('employers')
+            .aggregate([
+                {
+                    $lookup: {
+                        from: 'jobs',
+                        localField: '_id',
+                        foreignField: 'employerId',
+                        as: 'jobs'
+                    }
+                },
+                {
+                    $lookup: {
+                        from: 'applications',
+                        localField: '_id',
+                        foreignField: 'employerId',
+                        as: 'applications'
+                    }
+                },
+                {
+                    $project: {
+                        companyName: 1,
+                        companyEmail: 1,
+                        totalJobs: { $size: '$jobs' },
+                        activeJobs: {
+                            $size: {
+                                $filter: {
+                                    input: '$jobs',
+                                    as: 'job',
+                                    cond: { $eq: ['$$job.status', 'active'] }
+                                }
+                            }
+                        },
+                        totalApplications: { $size: '$applications' },
+                        createdAt: 1,
+                        status: 1
+                    }
+                }
+            ]).toArray();
+
+        res.json(employers);
+    } catch (error) {
+        console.error('Error fetching employers report:', error);
+        res.status(500).json({ message: 'Error fetching employers report' });
+    }
+});
+
+app.get('/api/admin/reports/jobs', async (req, res) => {
+    try {
+        const jobs = await db.collection('jobs')
+            .aggregate([
+                {
+                    $lookup: {
+                        from: 'applications',
+                        localField: '_id',
+                        foreignField: 'jobId',
+                        as: 'applications'
+                    }
+                },
+                {
+                    $lookup: {
+                        from: 'employers',
+                        localField: 'employerId',
+                        foreignField: '_id',
+                        as: 'employer'
+                    }
+                },
+                {
+                    $unwind: '$employer'
+                },
+                {
+                    $project: {
+                        title: 1,
+                        company: '$employer.companyName',
+                        industry: 1,
+                        location: 1,
+                        type: 1,
+                        applications: { $size: '$applications' },
+                        createdAt: 1,
+                        status: 1,
+                        employerId: 1
+                    }
+                },
+                {
+                    $sort: { createdAt: -1 }
+                }
+            ]).toArray();
+
+        res.json(jobs);
+    } catch (error) {
+        console.error('Error fetching jobs report:', error);
+        res.status(500).json({ message: 'Error fetching jobs report' });
+    }
+});
+
+app.get('/api/admin/reports/applications', async (req, res) => {
+    try {
+        const applications = await db.collection('applications')
+            .aggregate([
+                {
+                    $lookup: {
+                        from: 'jobseekers',
+                        localField: 'userId',
+                        foreignField: '_id',
+                        as: 'jobseeker'
+                    }
+                },
+                {
+                    $lookup: {
+                        from: 'jobs',
+                        localField: 'jobId',
+                        foreignField: '_id',
+                        as: 'job'
+                    }
+                },
+                {
+                    $lookup: {
+                        from: 'employers',
+                        localField: 'employerId',
+                        foreignField: '_id',
+                        as: 'employer'
+                    }
+                },
+                {
+                    $unwind: '$jobseeker'
+                },
+                {
+                    $unwind: '$job'
+                },
+                {
+                    $unwind: '$employer'
+                },
+                {
+                    $project: {
+                        _id: 1,
+                        applicantName: { $concat: ['$jobseeker.firstName', ' ', '$jobseeker.lastName'] },
+                        jobTitle: '$job.title',
+                        company: '$employer.companyName',
+                        appliedDate: 1,
+                        status: 1,
+                        experience: '$jobseeker.experience'
+                    }
+                }
+            ]).toArray();
+
+        res.json(applications);
+    } catch (error) {
+        console.error('Error fetching applications report:', error);
+        res.status(500).json({ message: 'Error fetching applications report' });
+    }
+});
+
+// Filter routes for reports
+app.get('/api/admin/reports/jobseekers/filter', async (req, res) => {
+    try {
+        const { location, status } = req.query;
+        const query = {};
+        
+        if (location) query.location = location;
+        if (status) query.status = status;
+
+        const jobseekers = await db.collection('jobseekers')
+            .find(query)
+            .toArray();
+
+        res.json(jobseekers);
+    } catch (error) {
+        console.error('Error filtering jobseekers:', error);
+        res.status(500).json({ message: 'Error filtering jobseekers' });
+    }
+});
+
+app.get('/api/admin/reports/employers/filter', async (req, res) => {
+    try {
+        const { status } = req.query;
+        const query = {};
+        
+        if (status) query.status = status;
+
+        const employers = await db.collection('employers')
+            .find(query)
+            .toArray();
+
+        res.json(employers);
+    } catch (error) {
+        console.error('Error filtering employers:', error);
+        res.status(500).json({ message: 'Error filtering employers' });
+    }
+});
+
+app.get('/api/admin/reports/jobs/filter', async (req, res) => {
+    try {
+        const { industry, location, type, status } = req.query;
+        const query = {};
+        
+        if (industry) query.industry = industry;
+        if (location) query.location = location;
+        if (type) query.type = type;
+        if (status) query.status = status;
+
+        const jobs = await db.collection('jobs')
+            .find(query)
+            .toArray();
+
+        res.json(jobs);
+    } catch (error) {
+        console.error('Error filtering jobs:', error);
+        res.status(500).json({ message: 'Error filtering jobs' });
+    }
+});
+
+app.get('/api/admin/reports/applications/filter', async (req, res) => {
+    try {
+        const { status, startDate, endDate } = req.query;
+        const query = {};
+        
+        if (status) query.status = status;
+        if (startDate || endDate) {
+            query.appliedDate = {};
+            if (startDate) query.appliedDate.$gte = new Date(startDate);
+            if (endDate) query.appliedDate.$lte = new Date(endDate);
+        }
+
+        const applications = await db.collection('applications')
+            .find(query)
+            .toArray();
+
+        res.json(applications);
+    } catch (error) {
+        console.error('Error filtering applications:', error);
+        res.status(500).json({ message: 'Error filtering applications' });
     }
 });
 
