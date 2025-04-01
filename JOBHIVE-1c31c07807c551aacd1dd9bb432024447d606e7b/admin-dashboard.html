@@ -196,24 +196,206 @@
                 <!-- Reports Section -->
                 <div id="reports-section" class="section" style="display: none;">
                     <h2 class="mb-4">Reports & Analytics</h2>
-                    <div class="row">
-                        <div class="col-md-6">
-                            <div class="chart-container">
-                                <h4>Popular Jobs</h4>
-                                <canvas id="popularJobsChart"></canvas>
+                    
+                    <!-- Report Navigation -->
+                    <ul class="nav nav-tabs mb-4" id="reportTabs" role="tablist">
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link active" id="jobseekers-tab" data-bs-toggle="tab" data-bs-target="#jobseekers-report" type="button" role="tab">
+                                Job Seekers Report
+                            </button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="employers-tab" data-bs-toggle="tab" data-bs-target="#employers-report" type="button" role="tab">
+                                Employers Report
+                            </button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="jobs-tab" data-bs-toggle="tab" data-bs-target="#jobs-report" type="button" role="tab">
+                                Job Listings Report
+                            </button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="applications-tab" data-bs-toggle="tab" data-bs-target="#applications-report" type="button" role="tab">
+                                Applications Report
+                            </button>
+                        </li>
+                    </ul>
+
+                    <!-- Report Content -->
+                    <div class="tab-content" id="reportTabsContent">
+                        <!-- Job Seekers Report -->
+                        <div class="tab-pane fade show active" id="jobseekers-report" role="tabpanel">
+                            <div class="card">
+                                <div class="card-header d-flex justify-content-between align-items-center">
+                                    <h5 class="mb-0">Job Seekers Report</h5>
+                                    <div>
+                                        <button class="btn btn-sm btn-outline-primary me-2" onclick="filterJobseekers()">
+                                            <i class="bi bi-funnel"></i> Filter
+                                        </button>
+                                        <button class="btn btn-sm btn-primary" onclick="exportJobseekersReport()">
+                                            <i class="bi bi-download"></i> Export
+                                        </button>
+                                    </div>
+                                </div>
+                                <div class="card-body">
+                                    <div class="table-responsive">
+                                        <table class="table table-hover">
+                                            <thead>
+                                                <tr>
+                                                    <th>Name</th>
+                                                    <th>Email</th>
+                                                    <th>Location</th>
+                                                    <th>Resume</th>
+                                                    <th>Applications</th>
+                                                    <th>Joined Date</th>
+                                                    <th>Status</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody id="jobseekersReportBody"></tbody>
+                                        </table>
+                                    </div>
+                                </div>
                             </div>
                         </div>
-                        <div class="col-md-6">
-                            <div class="chart-container">
-                                <h4>Active Employers</h4>
-                                <canvas id="activeEmployersChart"></canvas>
+
+                        <!-- Employers Report -->
+                        <div class="tab-pane fade" id="employers-report" role="tabpanel">
+                            <div class="card">
+                                <div class="card-header d-flex justify-content-between align-items-center">
+                                    <h5 class="mb-0">Employers Report</h5>
+                                    <div>
+                                        <button class="btn btn-sm btn-outline-primary me-2" onclick="filterEmployers()">
+                                            <i class="bi bi-funnel"></i> Filter
+                                        </button>
+                                        <button class="btn btn-sm btn-primary" onclick="exportEmployersReport()">
+                                            <i class="bi bi-download"></i> Export
+                                        </button>
+                                    </div>
+                                </div>
+                                <div class="card-body">
+                                    <div class="table-responsive">
+                                        <table class="table table-hover">
+                                            <thead>
+                                                <tr>
+                                                    <th>Company Name</th>
+                                                    <th>Email</th>
+                                                    <th>Posted Jobs</th>
+                                                    <th>Active Jobs</th>
+                                                    <th>Total Applications</th>
+                                                    <th>Joined Date</th>
+                                                    <th>Status</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody id="employersReportBody"></tbody>
+                                        </table>
+                                    </div>
+                                </div>
                             </div>
                         </div>
-                    </div>
-                    <div class="mt-4">
-                        <button class="btn btn-primary" id="downloadReportBtn">
-                            <i class="bi bi-download"></i> Download Report
-                        </button>
+
+                        <!-- Job Listings Report -->
+                        <div class="tab-pane fade" id="jobs-report" role="tabpanel">
+                            <div class="card">
+                                <div class="card-header d-flex justify-content-between align-items-center">
+                                    <h5 class="mb-0">Job Listings Report</h5>
+                                    <div>
+                                        <button class="btn btn-sm btn-outline-primary me-2" onclick="filterJobs()">
+                                            <i class="bi bi-funnel"></i> Filter
+                                        </button>
+                                        <button class="btn btn-sm btn-primary" onclick="exportJobsReport()">
+                                            <i class="bi bi-download"></i> Export
+                                        </button>
+                                    </div>
+                                </div>
+                                <div class="card-body">
+                                    <div class="row mb-3">
+                                        <div class="col-md-4">
+                                            <select class="form-select" id="industryFilter">
+                                                <option value="">All Industries</option>
+                                            </select>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <select class="form-select" id="locationFilter">
+                                                <option value="">All Locations</option>
+                                            </select>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <select class="form-select" id="jobTypeFilter">
+                                                <option value="">All Job Types</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div class="table-responsive">
+                                        <table class="table table-hover">
+                                            <thead>
+                                                <tr>
+                                                    <th>Job Title</th>
+                                                    <th>Company</th>
+                                                    <th>Industry</th>
+                                                    <th>Location</th>
+                                                    <th>Type</th>
+                                                    <th>Applications</th>
+                                                    <th>Posted Date</th>
+                                                    <th>Status</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody id="jobsReportBody"></tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Applications Report -->
+                        <div class="tab-pane fade" id="applications-report" role="tabpanel">
+                            <div class="card">
+                                <div class="card-header d-flex justify-content-between align-items-center">
+                                    <h5 class="mb-0">Applications Report</h5>
+                                    <div>
+                                        <button class="btn btn-sm btn-outline-primary me-2" onclick="filterApplications()">
+                                            <i class="bi bi-funnel"></i> Filter
+                                        </button>
+                                        <button class="btn btn-sm btn-primary" onclick="exportApplicationsReport()">
+                                            <i class="bi bi-download"></i> Export
+                                        </button>
+                                    </div>
+                                </div>
+                                <div class="card-body">
+                                    <div class="row mb-3">
+                                        <div class="col-md-4">
+                                            <select class="form-select" id="applicationStatusFilter">
+                                                <option value="">All Statuses</option>
+                                                <option value="pending">Pending</option>
+                                                <option value="accepted">Accepted</option>
+                                                <option value="rejected">Rejected</option>
+                                            </select>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <input type="date" class="form-control" id="dateRangeStart" placeholder="Start Date">
+                                        </div>
+                                        <div class="col-md-4">
+                                            <input type="date" class="form-control" id="dateRangeEnd" placeholder="End Date">
+                                        </div>
+                                    </div>
+                                    <div class="table-responsive">
+                                        <table class="table table-hover">
+                                            <thead>
+                                                <tr>
+                                                    <th>Applicant</th>
+                                                    <th>Job Title</th>
+                                                    <th>Company</th>
+                                                    <th>Applied Date</th>
+                                                    <th>Status</th>
+                                                    <th>Experience</th>
+                                                    <th>Actions</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody id="applicationsReportBody"></tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -612,80 +794,193 @@
 
         // Load reports
         async function loadReports() {
-            const response = await fetch('http://localhost:3000/api/admin/reports', {
-                headers: {
-                    'Authorization': `Bearer ${localStorage.getItem('adminToken')}`
+            try {
+                const adminToken = localStorage.getItem('adminToken');
+                
+                // Load Job Seekers Report
+                const jobseekersResponse = await fetch('http://localhost:3000/api/admin/reports/jobseekers', {
+                    headers: {
+                        'Authorization': `Bearer ${adminToken}`
+                    }
+                });
+                if (jobseekersResponse.ok) {
+                    const jobseekers = await jobseekersResponse.json();
+                    displayJobseekersReport(jobseekers);
                 }
-            });
-            
-            if (response.ok) {
-                const reports = await response.json();
-                updatePopularJobsChart(reports.popularJobs);
-                updateActiveEmployersChart(reports.activeEmployers);
+
+                // Load Employers Report
+                const employersResponse = await fetch('http://localhost:3000/api/admin/reports/employers', {
+                    headers: {
+                        'Authorization': `Bearer ${adminToken}`
+                    }
+                });
+                if (employersResponse.ok) {
+                    const employers = await employersResponse.json();
+                    displayEmployersReport(employers);
+                }
+
+                // Load Jobs Report
+                const jobsResponse = await fetch('http://localhost:3000/api/admin/reports/jobs', {
+                    headers: {
+                        'Authorization': `Bearer ${adminToken}`
+                    }
+                });
+                if (jobsResponse.ok) {
+                    const jobs = await jobsResponse.json();
+                    displayJobsReport(jobs);
+                }
+
+                // Load Applications Report
+                const applicationsResponse = await fetch('http://localhost:3000/api/admin/reports/applications', {
+                    headers: {
+                        'Authorization': `Bearer ${adminToken}`
+                    }
+                });
+                if (applicationsResponse.ok) {
+                    const applications = await applicationsResponse.json();
+                    displayApplicationsReport(applications);
+                }
+            } catch (error) {
+                console.error('Error loading reports:', error);
+                alert('Error loading reports. Please try again.');
             }
         }
 
-        // Chart functions
-        function updateRegistrationsChart(data) {
-            const ctx = document.getElementById('registrationsChart').getContext('2d');
-            new Chart(ctx, {
-                type: 'line',
-                data: {
-                    labels: data.labels,
-                    datasets: [{
-                        label: 'Registrations',
-                        data: data.values,
-                        borderColor: '#3498db',
-                        tension: 0.1
-                    }]
+        // Display Job Seekers Report
+        function displayJobseekersReport(jobseekers) {
+            const tbody = document.getElementById('jobseekersReportBody');
+            tbody.innerHTML = '';
+            
+            jobseekers.forEach(jobseeker => {
+                tbody.innerHTML += `
+                    <tr>
+                        <td>${jobseeker.firstName} ${jobseeker.lastName}</td>
+                        <td>${jobseeker.email}</td>
+                        <td>${jobseeker.location || 'Not specified'}</td>
+                        <td>
+                            ${jobseeker.resumeUrl ? 
+                                `<a href="${jobseeker.resumeUrl}" target="_blank" class="btn btn-sm btn-outline-primary">
+                                    <i class="bi bi-file-text"></i> View
+                                </a>` : 
+                                'No resume'}
+                        </td>
+                        <td>${jobseeker.applications?.length || 0}</td>
+                        <td>${new Date(jobseeker.createdAt).toLocaleDateString()}</td>
+                        <td>
+                            <span class="badge ${jobseeker.status === 'active' ? 'bg-success' : 'bg-secondary'}">
+                                ${jobseeker.status}
+                            </span>
+                        </td>
+                    </tr>
+                `;
+            });
+        }
+
+        // Display Employers Report
+        function displayEmployersReport(employers) {
+            const tbody = document.getElementById('employersReportBody');
+            tbody.innerHTML = '';
+            
+            employers.forEach(employer => {
+                tbody.innerHTML += `
+                    <tr>
+                        <td>${employer.companyName}</td>
+                        <td>${employer.companyEmail}</td>
+                        <td>${employer.totalJobs || 0}</td>
+                        <td>${employer.activeJobs || 0}</td>
+                        <td>${employer.totalApplications || 0}</td>
+                        <td>${new Date(employer.createdAt).toLocaleDateString()}</td>
+                        <td>
+                            <span class="badge ${employer.status === 'active' ? 'bg-success' : 'bg-secondary'}">
+                                ${employer.status}
+                            </span>
+                        </td>
+                    </tr>
+                `;
+            });
+        }
+
+        // Display Jobs Report
+        function displayJobsReport(jobs) {
+            const tbody = document.getElementById('jobsReportBody');
+            tbody.innerHTML = '';
+            
+            // Update filter options
+            const industries = [...new Set(jobs.map(job => job.industry))];
+            const locations = [...new Set(jobs.map(job => job.location))];
+            const jobTypes = [...new Set(jobs.map(job => job.type))];
+            
+            updateFilterOptions('industryFilter', industries);
+            updateFilterOptions('locationFilter', locations);
+            updateFilterOptions('jobTypeFilter', jobTypes);
+            
+            jobs.forEach(job => {
+                tbody.innerHTML += `
+                    <tr>
+                        <td>${job.title}</td>
+                        <td>${job.company}</td>
+                        <td>${job.industry || 'Not specified'}</td>
+                        <td>${job.location}</td>
+                        <td>${job.type}</td>
+                        <td>${job.applications?.length || 0}</td>
+                        <td>${new Date(job.createdAt).toLocaleDateString()}</td>
+                        <td>
+                            <span class="badge ${job.status === 'active' ? 'bg-success' : 'bg-secondary'}">
+                                ${job.status}
+                            </span>
+                        </td>
+                    </tr>
+                `;
+            });
+        }
+
+        // Display Applications Report
+        function displayApplicationsReport(applications) {
+            const tbody = document.getElementById('applicationsReportBody');
+            tbody.innerHTML = '';
+            
+            applications.forEach(application => {
+                tbody.innerHTML += `
+                    <tr>
+                        <td>${application.applicantName}</td>
+                        <td>${application.jobTitle}</td>
+                        <td>${application.company}</td>
+                        <td>${new Date(application.appliedDate).toLocaleDateString()}</td>
+                        <td>
+                            <span class="badge ${getStatusBadgeClass(application.status)}">
+                                ${application.status}
+                            </span>
+                        </td>
+                        <td>${application.experience || 'Not specified'}</td>
+                        <td>
+                            <button class="btn btn-sm btn-info" onclick="viewApplication('${application._id}')">
+                                <i class="bi bi-eye"></i> View
+                            </button>
+                        </td>
+                    </tr>
+                `;
+            });
+        }
+
+        // Helper function to update filter options
+        function updateFilterOptions(selectId, options) {
+            const select = document.getElementById(selectId);
+            select.innerHTML = '<option value="">All</option>';
+            options.forEach(option => {
+                if (option) {
+                    select.innerHTML += `<option value="${option}">${option}</option>`;
                 }
             });
         }
 
-        function updateJobsChart(data) {
-            const ctx = document.getElementById('jobsChart').getContext('2d');
-            new Chart(ctx, {
-                type: 'line',
-                data: {
-                    labels: data.labels,
-                    datasets: [{
-                        label: 'Job Postings',
-                        data: data.values,
-                        borderColor: '#2ecc71',
-                        tension: 0.1
-                    }]
-                }
-            });
-        }
-
-        function updatePopularJobsChart(data) {
-            const ctx = document.getElementById('popularJobsChart').getContext('2d');
-            new Chart(ctx, {
-                type: 'bar',
-                data: {
-                    labels: data.labels,
-                    datasets: [{
-                        label: 'Applications',
-                        data: data.values,
-                        backgroundColor: '#3498db'
-                    }]
-                }
-            });
-        }
-
-        function updateActiveEmployersChart(data) {
-            const ctx = document.getElementById('activeEmployersChart').getContext('2d');
-            new Chart(ctx, {
-                type: 'bar',
-                data: {
-                    labels: data.labels,
-                    datasets: [{
-                        label: 'Active Employers',
-                        data: data.values,
-                        backgroundColor: '#2ecc71'
-                    }]
-                }
-            });
+        // Helper function to get status badge class
+        function getStatusBadgeClass(status) {
+            switch(status.toLowerCase()) {
+                case 'pending': return 'bg-warning';
+                case 'accepted': return 'bg-success';
+                case 'rejected': return 'bg-danger';
+                default: return 'bg-secondary';
+            }
         }
 
         // Logout function
