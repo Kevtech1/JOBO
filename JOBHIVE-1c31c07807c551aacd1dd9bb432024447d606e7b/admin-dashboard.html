@@ -160,8 +160,11 @@
                                     <button class="btn btn-sm btn-outline-primary me-2" onclick="filterUsers()">
                                         <i class="bi bi-funnel"></i> Filter
                                     </button>
-                                    <button class="btn btn-sm btn-primary" onclick="exportUsersReport()">
-                                        <i class="bi bi-download"></i> Export Report
+                                    <button class="btn btn-sm btn-primary me-2" onclick="exportUsersReport()">
+                                        <i class="bi bi-download"></i> CSV
+                                    </button>
+                                    <button class="btn btn-sm btn-danger" onclick="exportUsersPDF()">
+                                        <i class="bi bi-file-pdf"></i> PDF
                                     </button>
                                 </div>
                             </div>
@@ -215,8 +218,11 @@
                                     <button class="btn btn-sm btn-outline-primary me-2" onclick="filterJobs()">
                                         <i class="bi bi-funnel"></i> Filter
                                     </button>
-                                    <button class="btn btn-sm btn-primary" onclick="exportJobsReport()">
-                                        <i class="bi bi-download"></i> Export Report
+                                    <button class="btn btn-sm btn-primary me-2" onclick="exportJobsReport()">
+                                        <i class="bi bi-download"></i> CSV
+                                    </button>
+                                    <button class="btn btn-sm btn-danger" onclick="exportJobsPDF()">
+                                        <i class="bi bi-file-pdf"></i> PDF
                                     </button>
                                 </div>
                             </div>
@@ -580,6 +586,37 @@
             }
         }
 
+        // Export users PDF
+        async function exportUsersPDF() {
+            try {
+                const adminToken = localStorage.getItem('adminToken');
+                const userType = document.getElementById('userTypeFilter').value;
+                const userStatus = document.getElementById('userStatusFilter').value;
+                const userDate = document.getElementById('userDateFilter').value;
+
+                const response = await fetch(`http://localhost:3000/api/admin/reports/users/pdf?type=${userType}&status=${userStatus}&date=${userDate}`, {
+                    headers: { 'Authorization': `Bearer ${adminToken}` }
+                });
+
+                if (response.ok) {
+                    const blob = await response.blob();
+                    const url = window.URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = `users-report-${new Date().toISOString().split('T')[0]}.pdf`;
+                    document.body.appendChild(a);
+                    a.click();
+                    window.URL.revokeObjectURL(url);
+                    document.body.removeChild(a);
+                } else {
+                    throw new Error('Failed to generate PDF report');
+                }
+            } catch (error) {
+                console.error('Error exporting users PDF:', error);
+                showAlert('error', 'Error generating PDF report. Please try again.');
+            }
+        }
+
         // Load jobs
         async function loadJobs() {
             try {
@@ -831,6 +868,37 @@
             } catch (error) {
                 console.error('Error exporting jobs report:', error);
                 showAlert('error', 'Error generating report. Please try again.');
+            }
+        }
+
+        // Export jobs PDF
+        async function exportJobsPDF() {
+            try {
+                const adminToken = localStorage.getItem('adminToken');
+                const status = document.getElementById('jobStatusFilter').value;
+                const date = document.getElementById('jobDateFilter').value;
+                const search = document.getElementById('jobSearchFilter').value;
+
+                const response = await fetch(`http://localhost:3000/api/admin/reports/jobs/pdf?status=${status}&date=${date}&search=${search}`, {
+                    headers: { 'Authorization': `Bearer ${adminToken}` }
+                });
+
+                if (response.ok) {
+                    const blob = await response.blob();
+                    const url = window.URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = `jobs-report-${new Date().toISOString().split('T')[0]}.pdf`;
+                    document.body.appendChild(a);
+                    a.click();
+                    window.URL.revokeObjectURL(url);
+                    document.body.removeChild(a);
+                } else {
+                    throw new Error('Failed to generate PDF report');
+                }
+            } catch (error) {
+                console.error('Error exporting jobs PDF:', error);
+                showAlert('error', 'Error generating PDF report. Please try again.');
             }
         }
 
