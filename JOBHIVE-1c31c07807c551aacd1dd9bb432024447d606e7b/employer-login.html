@@ -181,47 +181,47 @@
         </div>
     </footer>
 
+   
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="navbar.js"></script>
     <script>
-        document.getElementById('employerLoginForm').addEventListener('submit', async (e) => {
+    
+        document.getElementById('employerLoginForm').addEventListener('submit', async function(e) {
             e.preventDefault();
             
-            const formData = {
-                email: document.getElementById('email').value,
-                password: document.getElementById('password').value
-            };
-
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            
             try {
                 const response = await fetch('http://localhost:3000/api/employer/login', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
                     },
-                    body: JSON.stringify(formData)
+                    body: JSON.stringify({ email, password })
                 });
 
                 const data = await response.json();
-
+                
                 if (response.ok) {
-                    // Check if user is not an employer
-                    if (!data.employer.employerId) {
-                        alert('Please use the regular Login page to access your account.');
-                        return;
-                    }
-
                     // Store employer data in localStorage
-                    localStorage.setItem('isEmployerLoggedIn', 'true');
-                    localStorage.setItem('employerData', JSON.stringify(data.employer));
-                    localStorage.setItem('employerId', data.employer._id);
+                    localStorage.setItem('userId', data.employer.id);
+                    localStorage.setItem('isLoggedIn', 'true');
+                    localStorage.setItem('userRole', 'employer'); // Set role as employer
+                    localStorage.setItem('userData', JSON.stringify(data.employer));
+                    localStorage.setItem('employerId', data.employer.id);
+                    
+                    // Show success message
+                    showToast('Login successful!');
                     
                     // Redirect to employer dashboard
                     window.location.href = 'employer-dashboard.html';
                 } else {
-                    alert(data.message || 'Login failed. Please check your credentials.');
+                    showToast(data.message || 'Login failed');
                 }
             } catch (error) {
-                console.error('Error:', error);
-                alert('An error occurred during login. Please try again.');
+                console.error('Login error:', error);
+                showToast('An error occurred during login');
             }
         });
     </script>

@@ -278,7 +278,7 @@
             
             const email = document.getElementById('email').value;
             const password = document.getElementById('password').value;
-
+            
             try {
                 const response = await fetch('http://localhost:3000/api/login', {
                     method: 'POST',
@@ -291,31 +291,23 @@
                 const data = await response.json();
                 
                 if (response.ok) {
-                    // Store user data and authentication state
-                    localStorage.setItem('userData', JSON.stringify({
-                        firstName: data.user.firstName,
-                        lastName: data.user.lastName,
-                        email: data.user.email,
-                        phone: data.user.phone,
-                        role: 'jobseeker' // Set role as jobseeker
-                    }));
-                    localStorage.setItem('userId', data.user._id);
+                    // Store user data in localStorage
+                    localStorage.setItem('userId', data.user.id);
                     localStorage.setItem('isLoggedIn', 'true');
-                    localStorage.setItem('userRole', 'jobseeker');
+                    localStorage.setItem('userRole', 'jobseeker'); // Set role as jobseeker for regular users
+                    localStorage.setItem('userData', JSON.stringify(data.user));
                     
-                    // If user has a jobseeker profile, store that ID too
-                    if (data.jobseeker && data.jobseeker._id) {
-                        localStorage.setItem('jobseekerId', data.jobseeker._id);
-                    }
-
+                    // Show success message
+                    showToast('Login successful!');
+                    
                     // Redirect to home page
                     window.location.href = 'index.html';
                 } else {
-                    alert(data.message || 'Login failed. Please try again.');
+                    showToast(data.message || 'Login failed');
                 }
             } catch (error) {
-                console.error('Error:', error);
-                alert('An error occurred. Please try again.');
+                console.error('Login error:', error);
+                showToast('An error occurred during login');
             }
         });
     </script>
