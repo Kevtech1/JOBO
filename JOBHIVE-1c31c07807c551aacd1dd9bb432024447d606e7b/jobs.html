@@ -127,16 +127,13 @@
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav ms-auto">
                     <li class="nav-item">
-                        <a class="nav-link" href="index.html">Home</a>
+                        <a class="nav-link active" href="index.html">Home</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link active" href="#" onclick="handleNavigation('jobs.html')">Jobs</a>
+                        <a class="nav-link" href="#" onclick="handleNavigation('jobs.html')">Jobs</a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link" href="#" onclick="handleNavigation('resume-builder.html')">Resume Builder</a>
-                    </li>
-                    <li class="nav-item" id="myProfileNav" style="display: none;">
-                        <a class="nav-link" href="myprofile.html">My Profile</a>
                     </li>
                     <li class="nav-item" id="loginNav">
                         <a class="nav-link" href="login.html">Login</a>
@@ -146,6 +143,9 @@
                     </li>
                     <li class="nav-item" id="logoutNav" style="display: none;">
                         <a class="nav-link" href="#" onclick="logout()">Logout</a>
+                    </li>
+                    <li class="nav-item" id="profileNavItem">
+                        <a class="nav-link" href="profile.html">My Profile</a>
                     </li>
                 </ul>
             </div>
@@ -277,7 +277,7 @@
                                 <div class="salary mb-2">KSh 45,000 - 60,000</div>
                                 <div class="d-flex gap-2">
                                     <a href="job-details.html" class="btn btn-outline-secondary">View Details</a>
-                                    <button class="btn btn-outline-primary">Apply Now</button>
+                                    <button class="btn btn-outline-primary" onclick="applyForJob('${job._id}')">Apply Now</button>
                                 </div>
                             </div>
                         </div>
@@ -302,8 +302,7 @@
                                 <div class="salary mb-2">KSh 15,000 - 20,000</div>
                                 <div class="d-flex gap-2">
                                     <button class="btn btn-outline-secondary">View Details</button>
-                                    <button class="btn btn-outline-primary">Apply Now</button>
-                                </div>
+                                    </div>
                             </div>
                         </div>
                     </div>

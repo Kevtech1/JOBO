@@ -1352,6 +1352,152 @@ initializeDB().then(() => {
         }
     }
 
+    // Submit Job Application
+    app.post('/api/applications', upload.single('resume'), async (req, res) => {
+        try {
+            const { jobId, userId, coverLetter } = req.body;
+
+            // Validate required fields
+            if (!jobId || !userId) {
+                return res.status(400).json({ message: 'Job ID and User ID are required' });
+            }
+
+            // Check if user has already applied
+            const existingApplication = await db.collection('applications').findOne({
+                jobId: new ObjectId(jobId),
+                userId: new ObjectId(userId)
+            });
+
+            if (existingApplication) {
+                return res.status(400).json({ message: 'You have already applied for this job' });
+            }
+
+            // Handle resume upload
+            let resumeUrl = null;
+            if (req.file) {
+                resumeUrl = `/uploads/${req.file.filename}`;
+            }
+
+            // Create application
+            const application = {
+                jobId: new ObjectId(jobId),
+                userId: new ObjectId(userId),
+                coverLetter,
+                resumeUrl,
+                status: 'Pending',
+                appliedAt: new Date()
+            };
+
+            const result = await db.collection('applications').insertOne(application);
+
+            // Update job's applications array
+            await db.collection('jobs').updateOne(
+                { _id: new ObjectId(jobId) },
+                { $push: { applications: result.insertedId } }
+            );
+
+            res.status(201).json({
+                message: 'Application submitted successfully',
+                applicationId: result.insertedId
+            });
+        } catch (error) {
+            console.error('Error submitting application:', error);
+            res.status(500).json({ message: 'Error submitting application' });
+        }
+    });
+
+    // Get User's Applications
+    app.get('/api/applications/user/:userId', async (req, res) => {
+        try {
+            const applications = await db.collection('applications')
+                .aggregate([
+                    { $match: { userId: new ObjectId(req.params.userId) } },
+                    {
+                        $lookup: {
+                            from: 'jobs',
+                            localField: 'jobId',
+                            foreignField: '_id',
+                            as: 'job'
+                        }
+                    },
+                    { $unwind: '$job' },
+                    {
+                        $project: {
+                            _id: 1,
+                            jobTitle: '$job.title',
+                            companyName: '$job.company',
+                            status: 1,
+                            appliedAt: 1,
+                            coverLetter: 1,
+                            resumeUrl: 1
+                        }
+                    }
+                ])
+                .toArray();
+
+            res.json(applications);
+        } catch (error) {
+            console.error('Error fetching applications:', error);
+            res.status(500).json({ message: 'Error fetching applications' });
+        }
+    });
+
+    // Get Job Applications (for employers)
+    app.get('/api/applications/job/:jobId', async (req, res) => {
+        try {
+            const applications = await db.collection('applications')
+                .aggregate([
+                    { $match: { jobId: new ObjectId(req.params.jobId) } },
+                    {
+                        $lookup: {
+                            from: 'users',
+                            localField: 'userId',
+                            foreignField: '_id',
+                            as: 'user'
+                        }
+                    },
+                    { $unwind: '$user' },
+                    {
+                        $project: {
+                            _id: 1,
+                            applicantName: { $concat: ['$user.firstName', ' ', '$user.lastName'] },
+                            email: '$user.email',
+                            status: 1,
+                            appliedAt: 1,
+                            coverLetter: 1,
+                            resumeUrl: 1
+                        }
+                    }
+                ])
+                .toArray();
+
+            res.json(applications);
+        } catch (error) {
+            console.error('Error fetching job applications:', error);
+            res.status(500).json({ message: 'Error fetching applications' });
+        }
+    });
+
+    // Update Application Status
+    app.put('/api/applications/:applicationId/status', async (req, res) => {
+        try {
+            const { status } = req.body;
+            const result = await db.collection('applications').updateOne(
+                { _id: new ObjectId(req.params.applicationId) },
+                { $set: { status } }
+            );
+
+            if (result.modifiedCount === 0) {
+                return res.status(404).json({ message: 'Application not found' });
+            }
+
+            res.json({ message: 'Application status updated successfully' });
+        } catch (error) {
+            console.error('Error updating application status:', error);
+            res.status(500).json({ message: 'Error updating application status' });
+        }
+    });
+
     // Start server
     app.listen(port, () => {
         console.log(`Server running on port ${port}`);

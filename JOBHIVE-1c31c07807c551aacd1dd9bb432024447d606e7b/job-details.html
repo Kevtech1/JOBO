@@ -158,7 +158,9 @@
                     <div class="salary">KSh 45,000 - 60,000</div>
                 </div>
                 <div class="col-md-4 text-md-end">
-                    <button class="btn btn-primary btn-lg">Apply Now</button>
+                    <div class="d-flex gap-3">
+                        <button class="btn btn-primary btn-lg" id="applyNowBtn">Apply Now</button>
+                    </div>
                 </div>
             </div>
         </div>
@@ -350,11 +352,11 @@
                 document.querySelector('.company-info h4').textContent = `About ${job.company}`;
                 document.querySelector('.company-info p').textContent = job.companyDescription || 'A leading company in the industry.';
 
-                // Add event listener to Apply Now button
-                document.querySelector('.btn-primary').addEventListener('click', () => applyForJob(job._id));
+                // Add event listener to Apply Now button with the correct job ID
+                document.getElementById('applyNowBtn').addEventListener('click', () => applyForJob(jobId));
 
                 // Load similar jobs
-                loadSimilarJobs(job._id, job.type);
+                loadSimilarJobs(jobId, job.type);
             } catch (error) {
                 console.error('Error loading job details:', error);
                 alert(`Error loading job details: ${error.message}`);
@@ -392,62 +394,18 @@
                 return;
             }
 
-            if (userRole === 'jobseeker') {
-                try {
-                    // First check if user has completed their profile
-                    const profileResponse = await fetch(`http://localhost:3000/api/jobseeker/${userId}`);
-                    if (!profileResponse.ok) {
-                        showToast('Please complete your profile first');
-                        window.location.href = 'myprofile.html';
-                        return;
-                    }
-
-                    // Get job details for the application
-                    const jobResponse = await fetch(`http://localhost:3000/api/jobs/${jobId}`);
-                    const jobData = await jobResponse.json();
-
-                    // Submit the job application
-                    const response = await fetch(`http://localhost:3000/api/jobs/${jobId}/apply`, {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json'
-                        },
-                        body: JSON.stringify({
-                            userId: userId,
-                            jobId: jobId,
-                            appliedAt: new Date().toISOString()
-                        })
-                    });
-
-                    const data = await response.json();
-                    if (response.ok) {
-                        showToast('Application submitted successfully!');
-                        
-                        // Store application in localStorage for immediate display
-                        const applications = JSON.parse(localStorage.getItem('userApplications') || '[]');
-                        const newApplication = {
-                            jobId: jobId,
-                            jobTitle: jobData.title,
-                            companyName: jobData.company,
-                            appliedAt: new Date().toISOString(),
-                            status: 'Pending'
-                        };
-                        
-                        // Check if application already exists
-                        const existingIndex = applications.findIndex(app => app.jobId === jobId);
-                        if (existingIndex === -1) {
-                            applications.push(newApplication);
-                            localStorage.setItem('userApplications', JSON.stringify(applications));
-                        }
-                    } else {
-                        showToast(data.message || 'Error applying for job');
-                    }
-                } catch (error) {
-                    console.error('Error applying for job:', error);
-                    showToast('Error applying for job. Please try again.');
+            try {
+                // First check if user is a jobseeker
+                if (userRole !== 'jobseeker') {
+                    showToast('Only job seekers can apply for jobs');
+                    return;
                 }
-            } else {
-                showToast('Only job seekers can apply for jobs');
+
+                // Redirect to applications page with job ID
+                window.location.href = `applications.html?jobId=${jobId}`;
+            } catch (error) {
+                console.error('Error applying for job:', error);
+                showToast('Error applying for job. Please try again.');
             }
         }
 

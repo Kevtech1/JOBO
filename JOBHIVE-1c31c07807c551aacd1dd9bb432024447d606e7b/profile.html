@@ -163,7 +163,7 @@
 </head>
 <body>
     <!-- Navigation Bar -->
-    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+    <nav class="navbar navbar-expand-lg navbar-dark">
         <div class="container">
             <a class="navbar-brand" href="index.html">JobHive Kenya</a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
@@ -587,6 +587,18 @@
             }
             loadUserProfile();
         });
+
+        // Add this function to both files
+        function applyForJob(jobId) {
+            if (!localStorage.getItem('userId')) {
+                showToast('Please log in to apply for jobs');
+                setTimeout(() => {
+                    window.location.href = 'login.html';
+                }, 1500);
+                return;
+            }
+            window.location.href = `applications.html?jobId=${jobId}`;
+        }
     </script>
 </body>
 </html> 
