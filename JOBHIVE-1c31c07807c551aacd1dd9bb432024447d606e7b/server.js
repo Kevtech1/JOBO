@@ -1175,7 +1175,7 @@ initializeDB().then(() => {
         try {
             console.log('Fetching jobs...');
             const { type, limit = 10, exclude } = req.query;
-            const query = { status: 'active' };
+            const query = { status: 'open' };
 
             if (type) {
                 query.type = type;

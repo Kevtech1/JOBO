@@ -408,10 +408,31 @@
         // Function to load jobs
         async function loadJobs() {
             try {
+                console.log('Fetching jobs from API...');
                 const response = await fetch('http://localhost:3000/api/jobs');
-                const jobs = await response.json();
                 
-                const jobsContainer = document.querySelector('.col-12');
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                const jobs = await response.json();
+                console.log('Jobs fetched successfully:', jobs);
+                
+                if (!jobs || jobs.length === 0) {
+                    console.log('No jobs found');
+                    // Display a message when no jobs are found
+                    const jobCardsContainer = document.querySelector('.col-12');
+                    jobCardsContainer.innerHTML = `
+                        <div class="d-flex justify-content-between align-items-center mb-4">
+                            <h4>No Jobs Found</h4>
+                        </div>
+                        <div class="alert alert-info">
+                            No job listings are available at the moment. Please check back later.
+                        </div>
+                    `;
+                    return;
+                }
+                
                 const jobsList = jobs.map(job => `
                     <div class="card job-card">
                         <div class="card-body">
@@ -424,7 +445,7 @@
                                         <span class="job-tag"><i class="fas fa-clock"></i> ${job.type}</span>
                                         <span class="job-tag"><i class="fas fa-briefcase"></i> ${job.experienceLevel}</span>
                                     </div>
-                                    <p class="card-text">${job.description}</p>
+                                    <p class="card-text">${job.description.substring(0, 150)}${job.description.length > 150 ? '...' : ''}</p>
                                 </div>
                                 <div class="text-end">
                                     <div class="salary mb-2">${formatSalary(job.salaryMin, job.salaryMax)}</div>
@@ -436,10 +457,6 @@
                         </div>
                     </div>
                 `).join('');
-
-                // Update the jobs count
-                document.querySelector('.d-flex.justify-content-between.align-items-center.mb-4 h4').textContent = 
-                    `Showing ${jobs.length} Jobs`;
 
                 // Replace the static job cards with dynamic ones
                 const jobCardsContainer = document.querySelector('.col-12');
@@ -482,7 +499,7 @@
                                             <span class="job-tag"><i class="fas fa-clock"></i> ${job.type}</span>
                                             <span class="job-tag"><i class="fas fa-briefcase"></i> ${job.experienceLevel}</span>
                                         </div>
-                                        <p class="card-text">${job.description}</p>
+                                        <p class="card-text">${job.description.substring(0, 150)}${job.description.length > 150 ? '...' : ''}</p>
                                     </div>
                                     <div class="text-end">
                                         <div class="salary mb-2">${formatSalary(job.salaryMin, job.salaryMax)}</div>
@@ -508,7 +525,16 @@
                 });
             } catch (error) {
                 console.error('Error loading jobs:', error);
-                alert('Error loading jobs. Please try again.');
+                // Display error message to user
+                const jobCardsContainer = document.querySelector('.col-12');
+                jobCardsContainer.innerHTML = `
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <h4>Error Loading Jobs</h4>
+                    </div>
+                    <div class="alert alert-danger">
+                        There was an error loading the job listings. Please try again later.
+                    </div>
+                `;
             }
         }
     </script>

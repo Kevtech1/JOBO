@@ -185,6 +185,51 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="navbar.js"></script>
     <script>
+        // Toast function to show messages
+        function showToast(message) {
+            // Create toast container if it doesn't exist
+            let toastContainer = document.querySelector('.toast-container');
+            if (!toastContainer) {
+                toastContainer = document.createElement('div');
+                toastContainer.className = 'toast-container position-fixed top-0 end-0 p-3';
+                document.body.appendChild(toastContainer);
+            }
+
+            // Create toast element
+            const toast = document.createElement('div');
+            toast.className = 'toast';
+            toast.setAttribute('role', 'alert');
+            toast.setAttribute('aria-live', 'assertive');
+            toast.setAttribute('aria-atomic', 'true');
+
+            // Create toast content
+            toast.innerHTML = `
+                <div class="toast-header">
+                    <strong class="me-auto">Notification</strong>
+                    <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
+                </div>
+                <div class="toast-body">
+                    ${message}
+                </div>
+            `;
+
+            // Add toast to container
+            toastContainer.appendChild(toast);
+
+            // Initialize and show toast
+            const bsToast = new bootstrap.Toast(toast, {
+                autohide: true,
+                delay: 2000
+            });
+            bsToast.show();
+
+            // Remove toast after it's hidden
+            toast.addEventListener('hidden.bs.toast', () => {
+                toast.remove();
+            });
+
+            return bsToast;
+        }
     
         document.getElementById('employerLoginForm').addEventListener('submit', async function(e) {
             e.preventDefault();
@@ -210,12 +255,14 @@
                     localStorage.setItem('userRole', 'employer'); // Set role as employer
                     localStorage.setItem('userData', JSON.stringify(data.employer));
                     localStorage.setItem('employerId', data.employer.id);
+                    localStorage.setItem('isEmployerLoggedIn', 'true');
+                    localStorage.setItem('employerData', JSON.stringify(data.employer));
                     
-                    // Show success message
-                    showToast('Login successful!');
-                    
-                    // Redirect to employer dashboard
-                    window.location.href = 'employer-dashboard.html';
+                    // Show success message and redirect after toast is hidden
+                    const toast = showToast('Login successful!');
+                    toast._element.addEventListener('hidden.bs.toast', () => {
+                        window.location.href = 'employer-dashboard.html';
+                    });
                 } else {
                     showToast(data.message || 'Login failed');
                 }
