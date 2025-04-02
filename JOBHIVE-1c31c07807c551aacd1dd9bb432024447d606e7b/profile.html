@@ -417,7 +417,7 @@
                 document.getElementById('profileName').textContent = `${userData.firstName} ${userData.lastName}`;
                 document.getElementById('profileEmail').textContent = userData.email;
                 if (userData.profilePhotoUrl) {
-                    document.getElementById('profilePicture').src = userData.profilePhotoUrl;
+                    document.getElementById('profilePicture').src = `http://localhost:3000${userData.profilePhotoUrl}`;
                 }
 
                 // Populate edit form
@@ -439,7 +439,7 @@
         async function loadApplications() {
             const userId = localStorage.getItem('userId');
             try {
-                const response = await fetch(`http://localhost:3000/api/jobseeker/${userId}/applications`);
+                const response = await fetch(`http://localhost:3000/api/applications/user/${userId}`);
                 if (!response.ok) {
                     throw new Error('Failed to fetch applications');
                 }
@@ -518,7 +518,7 @@
                 document.getElementById('profileName').textContent = `${firstName} ${lastName}`;
                 document.getElementById('profileEmail').textContent = email;
                 if (result.profilePhotoUrl) {
-                    document.getElementById('profilePicture').src = result.profilePhotoUrl;
+                    document.getElementById('profilePicture').src = `http://localhost:3000${result.profilePhotoUrl}`;
                 }
 
                 showToast('Profile updated successfully');
@@ -547,7 +547,7 @@
             }
 
             try {
-                const response = await fetch(`http://localhost:3000/api/users/${userId}/change-password`, {
+                const response = await fetch(`http://localhost:3000/api/user/${userId}/change-password`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
