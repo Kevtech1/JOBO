@@ -443,16 +443,23 @@
                         <!-- Applicants Section -->
                         <div id="applicants" class="dashboard-section" style="display: none;">
                             <h2 class="mb-4">Applicants</h2>
-                            <div class="applicant-card">
-                                <div class="d-flex justify-content-between align-items-center">
-                                    <div>
-                                        <h5>John Doe</h5>
-                                        <p class="mb-0">Software Developer</p>
-                                        <small class="text-muted">Applied for: Senior Software Developer</small>
+                            <div id="applicantsList">
+                                <!-- Applicants will be loaded here dynamically -->
+                            </div>
+                        </div>
+
+                        <!-- Jobseeker Profile Modal -->
+                        <div class="modal fade" id="jobseekerProfileModal" tabindex="-1">
+                            <div class="modal-dialog modal-lg">
+                                <div class="modal-content">
+                                    <div class="modal-header">
+                                        <h5 class="modal-title">Jobseeker Profile</h5>
+                                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                                     </div>
-                                    <div>
-                                        <button class="btn btn-primary me-2">View Profile</button>
-                                        <button class="btn btn-success">Accept</button>
+                                    <div class="modal-body">
+                                        <div id="jobseekerProfileContent">
+                                            <!-- Profile content will be loaded here -->
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -977,6 +984,119 @@
                 }
             }
         });
+
+        // Function to load applicants
+        async function loadApplicants() {
+            const employerData = checkEmployerLogin();
+            if (!employerData) return;
+
+            try {
+                const response = await fetch(`http://localhost:3000/api/employer/applications/${employerData.id}`);
+                if (!response.ok) {
+                    throw new Error('Failed to fetch applications');
+                }
+
+                const applications = await response.json();
+                const applicantsList = document.getElementById('applicantsList');
+                
+                if (!applications || applications.length === 0) {
+                    applicantsList.innerHTML = '<div class="alert alert-info">No applicants yet.</div>';
+                    return;
+                }
+
+                applicantsList.innerHTML = applications.map(app => `
+                    <div class="applicant-card">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h5>${app.applicantName}</h5>
+                                <p class="mb-0">${app.jobTitle}</p>
+                                <small class="text-muted">Applied: ${new Date(app.appliedAt).toLocaleDateString()}</small>
+                            </div>
+                            <div>
+                                <button class="btn btn-primary me-2" onclick="viewJobseekerProfile('${app.userId}')">View Profile</button>
+                                <button class="btn btn-success" onclick="updateApplicationStatus('${app._id}', 'accepted')">Accept</button>
+                            </div>
+                        </div>
+                    </div>
+                `).join('');
+            } catch (error) {
+                console.error('Error loading applicants:', error);
+                document.getElementById('applicantsList').innerHTML = 
+                    '<div class="alert alert-danger">Error loading applicants. Please try again.</div>';
+            }
+        }
+
+        // Function to view jobseeker profile
+        async function viewJobseekerProfile(userId) {
+            try {
+                const response = await fetch(`http://localhost:3000/api/jobseeker/${userId}`);
+                if (!response.ok) {
+                    throw new Error('Failed to fetch jobseeker profile');
+                }
+
+                const profile = await response.json();
+                const modalContent = document.getElementById('jobseekerProfileContent');
+                
+                modalContent.innerHTML = `
+                    <div class="row">
+                        <div class="col-md-4 text-center mb-3">
+                            ${profile.profilePhotoUrl ? 
+                                `<img src="${profile.profilePhotoUrl}" alt="Profile Photo" class="img-fluid rounded-circle mb-3" style="max-width: 150px;">` :
+                                '<div class="rounded-circle bg-secondary text-white d-flex align-items-center justify-content-center mx-auto mb-3" style="width: 150px; height: 150px;"><i class="fas fa-user fa-3x"></i></div>'
+                            }
+                        </div>
+                        <div class="col-md-8">
+                            <h4>${profile.firstName} ${profile.lastName}</h4>
+                            <p class="text-muted">${profile.email}</p>
+                            <hr>
+                            <div class="mb-3">
+                                <strong>Phone:</strong> ${profile.phone || 'Not provided'}
+                            </div>
+                            <div class="mb-3">
+                                <strong>Location:</strong> ${profile.location || 'Not provided'}
+                            </div>
+                            ${profile.resumeUrl ? 
+                                `<div class="mb-3">
+                                    <a href="${profile.resumeUrl}" target="_blank" class="btn btn-outline-primary">
+                                        <i class="fas fa-file-alt me-2"></i>View Resume
+                                    </a>
+                                </div>` : ''
+                            }
+                        </div>
+                    </div>
+                `;
+
+                // Show the modal
+                const modal = new bootstrap.Modal(document.getElementById('jobseekerProfileModal'));
+                modal.show();
+            } catch (error) {
+                console.error('Error viewing jobseeker profile:', error);
+                alert('Error loading jobseeker profile. Please try again.');
+            }
+        }
+
+        // Function to update application status
+        async function updateApplicationStatus(applicationId, status) {
+            try {
+                const response = await fetch(`http://localhost:3000/api/applications/${applicationId}/status`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ status })
+                });
+
+                if (!response.ok) {
+                    throw new Error('Failed to update application status');
+                }
+
+                alert('Application status updated successfully');
+                loadApplicants(); // Refresh the applicants list
+            } catch (error) {
+                console.error('Error updating application status:', error);
+                alert('Error updating application status. Please try again.');
+            }
+        }
     </script>
 </body>
 </html> 

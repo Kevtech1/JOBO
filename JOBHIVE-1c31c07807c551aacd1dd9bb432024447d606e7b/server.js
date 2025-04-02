@@ -1298,14 +1298,20 @@ initializeDB().then(() => {
             return res.status(400).json({ message: "User ID is required" });
         }
 
-        await db.collection("JobSeekers").updateOne(
-            { userId },
+        // Get user data first
+        const user = await db.collection("users").findOne({ _id: new ObjectId(userId) });
+        if (!user) {
+            return res.status(404).json({ message: "User not found" });
+        }
+
+        await db.collection("jobseekers").updateOne(
+            { userId: new ObjectId(userId) },
             { 
                 $set: { 
-                    firstName, 
-                    lastName, 
-                    email, 
-                    phone, 
+                    firstName: user.firstName,
+                    lastName: user.lastName,
+                    email: user.email,
+                    phone: user.phone,
                     location, 
                     profilePhotoUrl, 
                     resumeUrl,

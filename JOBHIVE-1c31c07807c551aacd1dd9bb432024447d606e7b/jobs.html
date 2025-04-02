@@ -277,7 +277,6 @@
                                 <div class="salary mb-2">KSh 45,000 - 60,000</div>
                                 <div class="d-flex gap-2">
                                     <a href="job-details.html" class="btn btn-outline-secondary">View Details</a>
-                                    <button class="btn btn-outline-primary" onclick="applyForJob('${job._id}')">Apply Now</button>
                                 </div>
                             </div>
                         </div>
@@ -302,7 +301,7 @@
                                 <div class="salary mb-2">KSh 15,000 - 20,000</div>
                                 <div class="d-flex gap-2">
                                     <button class="btn btn-outline-secondary">View Details</button>
-                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -362,6 +361,11 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="navbar.js"></script>
     <script>
+        // Function to handle navigation
+        function handleNavigation(page) {
+            window.location.href = page;
+        }
+
         // Check login status and update navbar
         function checkLoginStatus() {
             const userData = JSON.parse(localStorage.getItem('userData'));
@@ -381,17 +385,6 @@
                 employerNavItem.style.display = 'block';
                 logoutNav.style.display = 'none';
             }
-        }
-
-        // Handle navigation based on login status
-        function handleNavigation(page) {
-            const userData = JSON.parse(localStorage.getItem('userData'));
-            if (!userData) {
-                alert('Please log in to access this feature');
-                window.location.href = 'login.html';
-                return;
-            }
-            window.location.href = page;
         }
 
         // Logout function
@@ -437,7 +430,6 @@
                                     <div class="salary mb-2">${formatSalary(job.salaryMin, job.salaryMax)}</div>
                                     <div class="d-flex gap-2">
                                         <a href="job-details.html?id=${job._id}" class="btn btn-outline-secondary">View Details</a>
-                                        <button class="btn btn-outline-primary" onclick="applyForJob('${job._id}')">Apply Now</button>
                                     </div>
                                 </div>
                             </div>
@@ -496,7 +488,6 @@
                                         <div class="salary mb-2">${formatSalary(job.salaryMin, job.salaryMax)}</div>
                                         <div class="d-flex gap-2">
                                             <a href="job-details.html?id=${job._id}" class="btn btn-outline-secondary">View Details</a>
-                                            <button class="btn btn-outline-primary" onclick="applyForJob('${job._id}')">Apply Now</button>
                                         </div>
                                     </div>
                                 </div>
@@ -520,105 +511,6 @@
                 alert('Error loading jobs. Please try again.');
             }
         }
-
-        // Function to handle job application
-        async function applyForJob(jobId) {
-            const userId = localStorage.getItem('userId');
-            const userRole = localStorage.getItem('userRole');
-
-            if (!userId) {
-                showToast('Please log in to apply for jobs');
-                window.location.href = 'login.html';
-                return;
-            }
-
-            if (userRole === 'jobseeker') {
-                try {
-                    // First check if user has completed their profile
-                    const profileResponse = await fetch(`http://localhost:3000/api/jobseeker/${userId}`);
-                    if (!profileResponse.ok) {
-                        showToast('Please complete your profile first');
-                        window.location.href = 'myprofile.html';
-                        return;
-                    }
-
-                    // Get job details for the application
-                    const jobResponse = await fetch(`http://localhost:3000/api/jobs/${jobId}`);
-                    const jobData = await jobResponse.json();
-
-                    // Submit the job application
-                    const response = await fetch(`http://localhost:3000/api/jobseeker/${userId}/applications`, {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json'
-                        },
-                        body: JSON.stringify({
-                            jobId: jobId,
-                            appliedAt: new Date().toISOString()
-                        })
-                    });
-
-                    const data = await response.json();
-                    if (response.ok) {
-                        showToast('Application submitted successfully!');
-                        
-                        // Store application in localStorage for immediate display
-                        const applications = JSON.parse(localStorage.getItem('userApplications') || '[]');
-                        const newApplication = {
-                            jobId: jobId,
-                            jobTitle: jobData.title,
-                            companyName: jobData.company,
-                            appliedAt: new Date().toISOString(),
-                            status: 'Pending'
-                        };
-                        
-                        // Check if application already exists
-                        const existingIndex = applications.findIndex(app => app.jobId === jobId);
-                        if (existingIndex === -1) {
-                            applications.push(newApplication);
-                            localStorage.setItem('userApplications', JSON.stringify(applications));
-                        }
-                    } else {
-                        showToast(data.message || 'Error applying for job');
-                    }
-                } catch (error) {
-                    console.error('Error applying for job:', error);
-                    showToast('Error applying for job. Please try again.');
-                }
-            } else {
-                showToast('Only job seekers can apply for jobs');
-            }
-        }
-
-        // Add this function to check login status
-        function checkLoginStatus() {
-            const userId = localStorage.getItem('userId');
-            if (!userId) {
-                showToast('Please log in to access jobs');
-                setTimeout(() => {
-                    window.location.href = 'login.html';
-                }, 1500);
-                return false;
-            }
-            return true;
-        }
-
-        // Add this function to show toast notifications
-        function showToast(message) {
-            const toast = document.getElementById('successToast');
-            const toastMessage = document.getElementById('toastMessage');
-            toastMessage.textContent = message;
-            const bsToast = new bootstrap.Toast(toast);
-            bsToast.show();
-        }
-
-        // Check login status when page loads
-        document.addEventListener('DOMContentLoaded', function() {
-            if (!checkLoginStatus()) {
-                return;
-            }
-            // Rest of your page initialization code
-        });
     </script>
 </body>
 </html> 

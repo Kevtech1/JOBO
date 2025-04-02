@@ -387,7 +387,7 @@
         async function applyForJob(jobId) {
             const userId = localStorage.getItem('userId');
             if (!userId) {
-                showToast('Please log in to apply for jobs');
+                alert('Please log in to apply for jobs');
                 setTimeout(() => {
                     window.location.href = 'login.html';
                 }, 1500);
@@ -395,7 +395,26 @@
             }
 
             try {
-                // First check if user has already applied
+                // First check if user has completed their profile
+                const profileResponse = await fetch(`http://localhost:3000/api/jobseeker/${userId}`);
+                if (!profileResponse.ok) {
+                    alert('Please complete your profile before applying');
+                    setTimeout(() => {
+                        window.location.href = 'profile.html';
+                    }, 1500);
+                    return;
+                }
+
+                const profile = await profileResponse.json();
+                if (!profile.profileCompleted) {
+                    alert('Please complete your profile before applying');
+                    setTimeout(() => {
+                        window.location.href = 'profile.html';
+                    }, 1500);
+                    return;
+                }
+
+                // Check if user has already applied
                 const checkResponse = await fetch(`http://localhost:3000/api/applications/check/${userId}/${jobId}`);
                 if (!checkResponse.ok) {
                     throw new Error('Failed to check application status');
@@ -403,22 +422,7 @@
                 const { hasApplied } = await checkResponse.json();
                 
                 if (hasApplied) {
-                    showToast('You have already applied for this job');
-                    return;
-                }
-
-                // Check if user has completed profile
-                const userResponse = await fetch(`http://localhost:3000/api/user/${userId}`);
-                if (!userResponse.ok) {
-                    throw new Error('Failed to fetch user data');
-                }
-                const userData = await userResponse.json();
-
-                if (!userData.profileCompleted) {
-                    showToast('Please complete your profile before applying');
-                    setTimeout(() => {
-                        window.location.href = 'profile.html';
-                    }, 1500);
+                    alert('You have already applied for this job');
                     return;
                 }
 
@@ -439,10 +443,10 @@
                     throw new Error('Failed to submit application');
                 }
 
-                showToast('Application submitted successfully');
+                alert('Application submitted successfully');
             } catch (error) {
                 console.error('Error applying for job:', error);
-                showToast('Error submitting application');
+                alert('Error submitting application. Please try again.');
             }
         }
 
