@@ -312,8 +312,32 @@ app.get('/api/admin/stats/monthly', authenticateAdmin, async (req, res) => {
 // Admin User Management Routes
 app.get('/api/admin/users/jobseekers', async (req, res) => {
     try {
-        const jobseekers = await db.collection('jobseekers').find({}).toArray();
-        console.log('Found jobseekers:', jobseekers.length);
+        const jobseekers = await db.collection('jobseekers')
+            .aggregate([
+                {
+                    $lookup: {
+                        from: 'users',
+                        localField: 'userId',
+                        foreignField: '_id',
+                        as: 'user'
+                    }
+                },
+                { $unwind: '$user' },
+                {
+                    $project: {
+                        _id: 1,
+                        firstName: '$user.firstName',
+                        lastName: '$user.lastName',
+                        email: '$user.email',
+                        phone: '$user.phone',
+                        location: 1,
+                        profileCompleted: 1,
+                        createdAt: 1,
+                        status: 1
+                    }
+                }
+            ])
+            .toArray();
         res.json(jobseekers);
     } catch (error) {
         console.error('Error fetching jobseekers:', error);
@@ -609,6 +633,63 @@ app.get('/api/admin/reports/applications/filter', async (req, res) => {
     } catch (error) {
         console.error('Error filtering applications:', error);
         res.status(500).json({ message: 'Error filtering applications' });
+    }
+});
+
+// Admin Applications Endpoint
+app.get('/api/admin/applications', authenticateAdmin, async (req, res) => {
+    try {
+        const { status, date, search, job } = req.query;
+        let query = {};
+
+        if (status) query.status = status;
+        if (date) {
+            const startDate = new Date(date);
+            const endDate = new Date(startDate);
+            endDate.setDate(endDate.getDate() + 1);
+            query.appliedAt = { $gte: startDate, $lt: endDate };
+        }
+        if (job) query.jobId = new ObjectId(job);
+
+        const applications = await db.collection('applications')
+            .aggregate([
+                { $match: query },
+                {
+                    $lookup: {
+                        from: 'users',
+                        localField: 'userId',
+                        foreignField: '_id',
+                        as: 'user'
+                    }
+                },
+                {
+                    $lookup: {
+                        from: 'jobs',
+                        localField: 'jobId',
+                        foreignField: '_id',
+                        as: 'job'
+                    }
+                },
+                { $unwind: '$user' },
+                { $unwind: '$job' },
+                {
+                    $project: {
+                        _id: 1,
+                        applicantName: { $concat: ['$user.firstName', ' ', '$user.lastName'] },
+                        email: '$user.email',
+                        jobTitle: '$job.title',
+                        company: '$job.company',
+                        status: 1,
+                        appliedAt: 1
+                    }
+                }
+            ])
+            .toArray();
+
+        res.json(applications);
+    } catch (error) {
+        console.error('Error fetching admin applications:', error);
+        res.status(500).json({ message: 'Error fetching applications' });
     }
 });
 

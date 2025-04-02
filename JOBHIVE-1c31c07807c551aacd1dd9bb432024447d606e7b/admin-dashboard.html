@@ -1095,47 +1095,16 @@
         checkAdminAuth();
         loadDashboardStats();
 
-        // Add profile completion check function
-        async function checkProfileCompletion() {
-            const userId = localStorage.getItem('userId');
-            const userRole = localStorage.getItem('userRole');
-
-            if (!userId || userRole !== 'jobseeker') {
-                window.location.href = 'login.html';
-                return;
-            }
-
-            try {
-                const response = await fetch(`http://localhost:3000/api/jobseeker/${userId}`);
-                if (!response.ok) {
-                    showToast('Please complete your profile first');
-                    return;
-                }
-
-                const profileData = await response.json();
-                if (!isProfileComplete(profileData)) {
-                    showToast('Please complete your profile first');
-                    return;
-                }
-
-                // Profile is complete, allow access to the page
-                loadProfile();
-            } catch (error) {
-                console.error('Error checking profile:', error);
-                showToast('Error checking profile status');
-            }
-        }
-
-        // Update the DOMContentLoaded event listener
+        // Remove the profile completion check function and its call
         document.addEventListener('DOMContentLoaded', function() {
             // Check login status first
             if (!checkLoginStatus()) {
                 return;
             }
             
-            // If logged in, check profile completion
-            checkProfileCompletion();
-            loadSavedFiles();
+            // Initialize dashboard
+            checkAdminAuth();
+            loadDashboardStats();
         });
     </script>
 </body>

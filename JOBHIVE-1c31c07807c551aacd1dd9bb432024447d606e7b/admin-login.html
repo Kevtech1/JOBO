@@ -98,6 +98,35 @@
                 errorAlert.style.display = 'block';
             }
         });
+
+        document.querySelectorAll('.nav-link').forEach(link => {
+            link.addEventListener('click', (e) => {
+                if (e.target.id === 'logoutBtn') {
+                    logout();
+                    return;
+                }
+                
+                e.preventDefault();
+                const section = e.target.dataset.section;
+                if (!section) return;
+                
+                // Update active link
+                document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
+                e.target.classList.add('active');
+                
+                // Show selected section
+                document.querySelectorAll('.section-content').forEach(s => {
+                    if (s) s.style.display = 'none';
+                });
+                const targetSection = document.getElementById(`${section}-section`);
+                if (targetSection) {
+                    targetSection.style.display = 'block';
+                }
+                
+                // Load section data
+                loadSectionData(section);
+            });
+        });
     </script>
 </body>
 </html> 

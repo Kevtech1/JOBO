@@ -300,6 +300,11 @@
                             <input type="file" class="form-control" id="editProfilePicture" accept="image/*">
                             <small class="text-muted">Max size: 2MB</small>
                         </div>
+                        <div class="mb-3">
+                            <label class="form-label">Resume (PDF or DOCX)</label>
+                            <input type="file" class="form-control" id="editResume" accept=".pdf,.docx">
+                            <small class="text-muted">Max size: 5MB</small>
+                        </div>
                     </form>
                 </div>
                 <div class="modal-footer">
@@ -500,6 +505,20 @@
                         return;
                     }
                     formData.append('profilePhoto', profilePicture);
+                }
+
+                // Handle resume upload
+                const resume = document.getElementById('editResume').files[0];
+                if (resume) {
+                    if (resume.size > 5 * 1024 * 1024) {
+                        showToast('Resume must be less than 5MB');
+                        return;
+                    }
+                    if (!resume.type.match('application/pdf|application/vnd.openxmlformats-officedocument.wordprocessingml.document')) {
+                        showToast('Resume must be a PDF or DOCX file');
+                        return;
+                    }
+                    formData.append('resume', resume);
                 }
 
                 // Send the request to update the profile

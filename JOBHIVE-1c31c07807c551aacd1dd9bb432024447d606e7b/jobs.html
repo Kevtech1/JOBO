@@ -127,13 +127,16 @@
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav ms-auto">
                     <li class="nav-item">
-                        <a class="nav-link active" href="index.html">Home</a>
+                        <a class="nav-link" href="index.html">Home</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="#" onclick="handleNavigation('jobs.html')">Jobs</a>
+                        <a class="nav-link active" href="#" onclick="handleNavigation('jobs.html')">Jobs</a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link" href="#" onclick="handleNavigation('resume-builder.html')">Resume Builder</a>
+                    </li>
+                    <li class="nav-item" id="myProfileNav" style="display: none;">
+                        <a class="nav-link" href="myprofile.html">My Profile</a>
                     </li>
                     <li class="nav-item" id="loginNav">
                         <a class="nav-link" href="login.html">Login</a>
@@ -143,9 +146,6 @@
                     </li>
                     <li class="nav-item" id="logoutNav" style="display: none;">
                         <a class="nav-link" href="#" onclick="logout()">Logout</a>
-                    </li>
-                    <li class="nav-item" id="profileNavItem">
-                        <a class="nav-link" href="profile.html">My Profile</a>
                     </li>
                 </ul>
             </div>

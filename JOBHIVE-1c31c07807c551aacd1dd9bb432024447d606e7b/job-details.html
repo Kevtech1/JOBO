@@ -386,26 +386,63 @@
         // Function to handle job application
         async function applyForJob(jobId) {
             const userId = localStorage.getItem('userId');
-            const userRole = localStorage.getItem('userRole');
-
             if (!userId) {
                 showToast('Please log in to apply for jobs');
-                window.location.href = 'login.html';
+                setTimeout(() => {
+                    window.location.href = 'login.html';
+                }, 1500);
                 return;
             }
 
             try {
-                // First check if user is a jobseeker
-                if (userRole !== 'jobseeker') {
-                    showToast('Only job seekers can apply for jobs');
+                // First check if user has already applied
+                const checkResponse = await fetch(`http://localhost:3000/api/applications/check/${userId}/${jobId}`);
+                if (!checkResponse.ok) {
+                    throw new Error('Failed to check application status');
+                }
+                const { hasApplied } = await checkResponse.json();
+                
+                if (hasApplied) {
+                    showToast('You have already applied for this job');
                     return;
                 }
 
-                // Redirect to applications page with job ID
-                window.location.href = `applications.html?jobId=${jobId}`;
+                // Check if user has completed profile
+                const userResponse = await fetch(`http://localhost:3000/api/user/${userId}`);
+                if (!userResponse.ok) {
+                    throw new Error('Failed to fetch user data');
+                }
+                const userData = await userResponse.json();
+
+                if (!userData.profileCompleted) {
+                    showToast('Please complete your profile before applying');
+                    setTimeout(() => {
+                        window.location.href = 'profile.html';
+                    }, 1500);
+                    return;
+                }
+
+                // Submit the application
+                const response = await fetch('http://localhost:3000/api/applications', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        userId,
+                        jobId,
+                        status: 'Pending'
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error('Failed to submit application');
+                }
+
+                showToast('Application submitted successfully');
             } catch (error) {
                 console.error('Error applying for job:', error);
-                showToast('Error applying for job. Please try again.');
+                showToast('Error submitting application');
             }
         }
 
