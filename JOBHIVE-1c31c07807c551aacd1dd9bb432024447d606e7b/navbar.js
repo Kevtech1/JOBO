@@ -1,69 +1,42 @@
-// Function to update navbar based on login status and user role
+// Function to update navbar based on login status and current page
 function updateNavbar() {
-    const isLoggedIn = localStorage.getItem('isLoggedIn') === 'true';
+    const userId = localStorage.getItem('userId');
     const userRole = localStorage.getItem('userRole');
-    const userData = JSON.parse(localStorage.getItem('userData') || '{}');
+    const currentPage = window.location.pathname.split('/').pop() || 'index.html';
 
-    // Get navbar container
-    const navbarNav = document.querySelector('#navbarNav ul');
-    if (!navbarNav) return;
+    // Update login/logout visibility
+    const loginNav = document.getElementById('loginNav');
+    const logoutNav = document.getElementById('logoutNav');
+    const employerNavItem = document.getElementById('employerNavItem');
+    const profileNav = document.querySelector('a[href="profile.html"]').parentElement;
 
-    // Clear existing navbar items
-    navbarNav.innerHTML = '';
-
-    if (isLoggedIn) {
-        // Common items for both users and employers
-        navbarNav.innerHTML += `
-            <li class="nav-item">
-                <a class="nav-link ${window.location.pathname.includes('index.html') ? 'active' : ''}" href="index.html">Home</a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link ${window.location.pathname.includes('jobs.html') ? 'active' : ''}" href="jobs.html">Jobs</a>
-            </li>
-        `;
-
+    if (userId) {
+        loginNav.style.display = 'none';
+        logoutNav.style.display = 'block';
         if (userRole === 'jobseeker') {
-            // Jobseeker-specific items
-            navbarNav.innerHTML += `
-                <li class="nav-item">
-                    <a class="nav-link ${window.location.pathname.includes('resume-builder.html') ? 'active' : ''}" href="resume-builder.html">Resume Builder</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link ${window.location.pathname.includes('resume-builder.html') ? 'active' : ''}" href="resume-builder.html">My Profile</a>
-                </li>
-            `;
+            profileNav.style.display = 'block';
+            employerNavItem.style.display = 'none';
         } else if (userRole === 'employer') {
-            // Employer-specific items
-            navbarNav.innerHTML += `
-                <li class="nav-item">
-                    <a class="nav-link ${window.location.pathname.includes('employer-dashboard.html') ? 'active' : ''}" href="employer-dashboard.html">Dashboard</a>
-                </li>
-            `;
+            profileNav.style.display = 'none';
+            employerNavItem.style.display = 'block';
         }
-
-        // Logout button
-        navbarNav.innerHTML += `
-            <li class="nav-item">
-                <a class="nav-link" href="#" onclick="logout()">Logout</a>
-            </li>
-        `;
     } else {
-        // Guest (not logged in)
-        navbarNav.innerHTML += `
-            <li class="nav-item">
-                <a class="nav-link ${window.location.pathname.includes('index.html') ? 'active' : ''}" href="index.html">Home</a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link ${window.location.pathname.includes('jobs.html') ? 'active' : ''}" href="jobs.html">Jobs</a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link ${window.location.pathname.includes('login.html') ? 'active' : ''}" href="login.html">Login</a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link ${window.location.pathname.includes('employer-login.html') ? 'active' : ''}" href="employer-login.html">Employer</a>
-            </li>
-        `;
+        loginNav.style.display = 'block';
+        logoutNav.style.display = 'none';
+        profileNav.style.display = 'none';
+        employerNavItem.style.display = 'block';
     }
+
+    // Update active state for navigation links
+    const navLinks = document.querySelectorAll('.nav-link');
+    navLinks.forEach(link => {
+        const href = link.getAttribute('href');
+        if (href === currentPage) {
+            link.classList.add('active');
+        } else {
+            link.classList.remove('active');
+        }
+    });
 }
 
 // Function to check login status
@@ -109,15 +82,9 @@ async function applyForJob(jobId) {
 
 // Logout function
 function logout() {
-    // Clear all authentication data
     localStorage.removeItem('userId');
-    localStorage.removeItem('isLoggedIn');
     localStorage.removeItem('userRole');
     localStorage.removeItem('userData');
-    localStorage.removeItem('jobseekerId');
-    localStorage.removeItem('employerId');
-    
-    // Redirect to home page
     window.location.href = 'index.html';
 }
 
@@ -164,3 +131,6 @@ window.addEventListener('load', function() {
         updateNavbar();
     }
 });
+
+// Update navbar when navigating between pages
+window.addEventListener('popstate', updateNavbar);

@@ -162,10 +162,10 @@
     </style>
 </head>
 <body>
-    <!-- Navigation -->
-    <nav class="navbar navbar-expand-lg navbar-dark">
+    <!-- Navigation Bar -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
         <div class="container">
-            <a class="navbar-brand" href="index.html">JobHive</a>
+            <a class="navbar-brand" href="index.html">JobHive Kenya</a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
                 <span class="navbar-toggler-icon"></span>
             </button>
@@ -180,14 +180,14 @@
                     <li class="nav-item">
                         <a class="nav-link" href="resume-builder.html">Resume Builder</a>
                     </li>
-                    <li class="nav-item">
-                        <a class="nav-link active" href="profile.html">My Profile</a>
-                    </li>
-                    <li class="nav-item" id="loginNav">
-                        <a class="nav-link" href="login.html">Login</a>
+                    <li class="nav-item" id="profileNavItem" style="display: none;">
+                        <a class="nav-link" href="profile.html">My Profile</a>
                     </li>
                     <li class="nav-item" id="employerNavItem">
                         <a class="nav-link" href="employer-login.html">Employer</a>
+                    </li>
+                    <li class="nav-item" id="loginNav">
+                        <a class="nav-link" href="login.html">Login</a>
                     </li>
                     <li class="nav-item" id="logoutNav" style="display: none;">
                         <a class="nav-link" href="#" onclick="logout()">Logout</a>
@@ -343,6 +343,17 @@
         </div>
     </div>
 
+    <!-- Toast Notification -->
+    <div class="toast-container position-fixed bottom-0 end-0 p-3">
+        <div id="successToast" class="toast" role="alert" aria-live="assertive" aria-atomic="true">
+            <div class="toast-header">
+                <strong class="me-auto">Notification</strong>
+                <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
+            </div>
+            <div class="toast-body" id="toastMessage"></div>
+        </div>
+    </div>
+
     <!-- Footer -->
     <footer class="footer">
         <div class="container">
@@ -396,7 +407,7 @@
         async function loadUserProfile() {
             const userId = localStorage.getItem('userId');
             try {
-                const response = await fetch(`http://localhost:3000/api/users/${userId}`);
+                const response = await fetch(`http://localhost:3000/api/user/profile/${userId}`);
                 if (!response.ok) {
                     throw new Error('Failed to fetch user data');
                 }
@@ -405,8 +416,8 @@
                 // Update profile information
                 document.getElementById('profileName').textContent = `${userData.firstName} ${userData.lastName}`;
                 document.getElementById('profileEmail').textContent = userData.email;
-                if (userData.profilePicture) {
-                    document.getElementById('profilePicture').src = userData.profilePicture;
+                if (userData.profilePhotoUrl) {
+                    document.getElementById('profilePicture').src = userData.profilePhotoUrl;
                 }
 
                 // Populate edit form
@@ -460,21 +471,39 @@
         // Save profile changes
         async function saveProfileChanges() {
             const userId = localStorage.getItem('userId');
-            const formData = new FormData();
-            
-            formData.append('firstName', document.getElementById('editFirstName').value);
-            formData.append('lastName', document.getElementById('editLastName').value);
-            formData.append('email', document.getElementById('editEmail').value);
-            formData.append('phone', document.getElementById('editPhone').value);
-            formData.append('location', document.getElementById('editLocation').value);
+            const firstName = document.getElementById('editFirstName').value;
+            const lastName = document.getElementById('editLastName').value;
+            const email = document.getElementById('editEmail').value;
+            const phone = document.getElementById('editPhone').value;
+            const location = document.getElementById('editLocation').value;
 
-            const profilePicture = document.getElementById('editProfilePicture').files[0];
-            if (profilePicture) {
-                formData.append('profilePicture', profilePicture);
+            if (!firstName || !lastName || !email) {
+                showToast('Please fill in all required fields');
+                return;
             }
 
             try {
-                const response = await fetch(`http://localhost:3000/api/users/${userId}`, {
+                // Create FormData object
+                const formData = new FormData();
+                
+                // Add basic profile information
+                formData.append('firstName', firstName);
+                formData.append('lastName', lastName);
+                formData.append('phone', phone);
+                formData.append('location', location);
+
+                // Handle profile picture upload
+                const profilePicture = document.getElementById('editProfilePicture').files[0];
+                if (profilePicture) {
+                    if (profilePicture.size > 2 * 1024 * 1024) {
+                        showToast('Profile picture must be less than 2MB');
+                        return;
+                    }
+                    formData.append('profilePhoto', profilePicture);
+                }
+
+                // Send the request to update the profile
+                const response = await fetch(`http://localhost:3000/api/user/profile/${userId}`, {
                     method: 'PUT',
                     body: formData
                 });
@@ -483,10 +512,17 @@
                     throw new Error('Failed to update profile');
                 }
 
-                const updatedUser = await response.json();
+                const result = await response.json();
+
+                // Update UI
+                document.getElementById('profileName').textContent = `${firstName} ${lastName}`;
+                document.getElementById('profileEmail').textContent = email;
+                if (result.profilePhotoUrl) {
+                    document.getElementById('profilePicture').src = result.profilePhotoUrl;
+                }
+
                 showToast('Profile updated successfully');
                 bootstrap.Modal.getInstance(document.getElementById('editProfileModal')).hide();
-                loadUserProfile(); // Reload profile data
             } catch (error) {
                 console.error('Error updating profile:', error);
                 showToast('Error updating profile');
